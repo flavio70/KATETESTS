@@ -1,0 +1,1 @@
+This repository is for K@TE Test Library. (by smotool user)
