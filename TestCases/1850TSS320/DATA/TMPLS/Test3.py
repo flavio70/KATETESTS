@@ -55,11 +55,11 @@ class Test(TestCase):
     def test_body(self):
         print('@Running Main Test...')
         self.report.start_tps_block('TMPLS', '5-3-22')
-        self.report.add_success(None, "comando1_test3", '1', "output comando1 Test3 V1")
+        self.report.add_success(None, "comando1_test3", '1', "output comando1 Test3 V2")
         self.report.add_success(None, "comando2_test3", '1', "output comando2")
         self.report.stop_tps_block('TMPLS', '5-3-22')
         self.report.start_tps_block('TMPLS', '5-3-13')
-        self.report.add_failure(None, "comando3_test3", '1', "output comando3 TPS V1", "mmm")
+        self.report.add_failure(None, "comando3_test3", '1', "output comando3 TPS V2", "mmm")
         self.report.stop_tps_block('TMPLS', '5-3-13')
 
     def test_cleanup(self):
