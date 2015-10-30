@@ -20,7 +20,7 @@ TestCase template for K@TE test developers
 [AUTHOR] ippolf [AUTHOR]
 
 '''
-from KateLibs.testcase import TestCase
+from katelibs.testcase import TestCase
 
 class Test(TestCase):
     '''
@@ -55,11 +55,11 @@ class Test(TestCase):
     def test_body(self):
         print('@Running Main Test...')
         self.report.start_tps_block('DATAQOS', '5-4-2')
-        self.report.add_success(None, "comando1_test2", '1', "output comando1 Test2 V2")
+        self.report.add_success(None, "comando1_test2", '1', "output comando1 Test2 V3")
         self.report.add_success(None, "comando2_test2", '1', "output comando2")
         self.report.stop_tps_block('DATAQOS', '5-4-2')
         self.report.start_tps_block('DATAQOS', '5-4-3')
-        self.report.add_failure(None, "comando3_test2", '1', "output comando3 TPS V2", "mmm")
+        self.report.add_failure(None, "comando3_test2", '1', "output comando3 TPS V3", "mmm")
         self.report.stop_tps_block('DATAQOS', '5-4-3')
 
     def test_cleanup(self):
