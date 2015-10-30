@@ -20,7 +20,8 @@ TestCase template for K@TE test developers
 [AUTHOR] ippolf [AUTHOR]
 
 '''
-from KateLibs.testcase import TestCase
+from katelibs.testcase import TestCase
+from katelibs.eqpt1850tss320 import *
 
 class Test(TestCase):
     '''
@@ -46,7 +47,12 @@ class Test(TestCase):
 
     def dut_setup(self):
         print('@Running DUT SetUp...')
-        self.report.add_success(None, "Test3 DUT SetUp", '0', "Test3 DUT SetUp Output")
+        self.report.start_tps_block("EM", "1-2-3")
+        NE1.tl1.do("ACT-USER::admin:::Alcatel1;", policy="CMPLD")
+        NE1.tl1.do("RTRV-COND-ALL;", policy="CMPLD")
+        NE1.tl1.get_last_cmd_status()
+        NE1.tl1.get_last_outcome()
+        self.report.stop_tps_block("EM", "1-2-3")
 
     def test_setup(self):
         print('@Running test Setup...')
@@ -55,11 +61,11 @@ class Test(TestCase):
     def test_body(self):
         print('@Running Main Test...')
         self.report.start_tps_block('TMPLS', '5-3-22')
-        self.report.add_success(None, "comando1_test3", '1', "output comando1 Test3 V2")
+        self.report.add_success(None, "comando1_test3", '1', "output comando1 Test3 V3")
         self.report.add_success(None, "comando2_test3", '1', "output comando2")
         self.report.stop_tps_block('TMPLS', '5-3-22')
         self.report.start_tps_block('TMPLS', '5-3-13')
-        self.report.add_failure(None, "comando3_test3", '1', "output comando3 TPS V2", "mmm")
+        self.report.add_failure(None, "comando3_test3", '1', "output comando3 TPS V3", "mmm")
         self.report.stop_tps_block('TMPLS', '5-3-13')
 
     def test_cleanup(self):
@@ -67,15 +73,17 @@ class Test(TestCase):
         self.report.add_success(None, "test3 CleanUp", '0', "test3 CleanUp Output")
 
     def dut_cleanup(self):
-
         print('@Running DUT cleanUp...')
-        self.report.add_success(None, "test3 DUTCleanUp", '0', "test3 DUTCleanUp Output")
-
+        NE1.clean_up()
 
 
 #Please don't change the code below
 
 if __name__ == "__main__":
-    #initializing the Test object instance and run the main flow
+    #initializing the Test object instance, do not remove
     CTEST = Test(__file__)
+    #initializing all local variable and constants used by Test object
+    NE1 = Eqpt1850TSS320("NE1", 1025, krepo=CTEST.report )
+    # Run Test main flow
+    # Please don't touch this code
     CTEST.run()

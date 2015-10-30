@@ -20,8 +20,8 @@ TestCase template for K@TE test developers
 [AUTHOR] ippolf [AUTHOR]
 
 '''
-from KateLibs.testcase import TestCase
-from KateLibs.database import TTest
+from katelibs.testcase import TestCase
+from katelibs.database import TTest
 
 class Test(TestCase):
     '''
@@ -64,11 +64,11 @@ class Test(TestCase):
         print('@Running Main Test...')
         self.report.start_tps_block('PROVIDER', '5-3-1')
         self.report.start_tps_block('DATAQOS', '5-3-2')
-        self.report.add_success(None, "comando1_test1", '1', "output comando1 Test1 V2")
+        self.report.add_success(None, "comando1_test1", '1', "output comando1 Test1 V3")
         self.report.add_success(None, "comando2_test1", '1', "output comando2")
         self.report.stop_tps_block('DATAQOS', '5-3-2')
         self.report.start_tps_block('DATAQOS', '5-3-3')
-        self.report.add_failure(None, "comando3_test1", '1', "output comando3 TPS V2", "mmm")
+        self.report.add_failure(None, "comando3_test1", '1', "output comando3 TPS V3", "mmm")
         self.report.stop_tps_block('DATAQOS', '5-3-3')
 
     def test_cleanup(self):
