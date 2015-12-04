@@ -20,7 +20,12 @@ TestCase template for K@TE test developers
 [AUTHOR] ippolf [AUTHOR]
 
 '''
-from katelibs.testcase import TestCase
+from katelibs.testcase          import TestCase
+from katelibs.eqpt1850tss320    import Eqpt1850TSS320
+from katelibs.instrumentONT     import InstrumentONT
+#from katelibs.instrumentIXIA     import InstrumentIXIA
+#from katelibs.instrumentSPIRENT  import InstrumentSPIRENT
+from katelibs.swp1850tss320     import SWP1850TSS
 
 class Test(TestCase):
     '''
@@ -46,30 +51,30 @@ class Test(TestCase):
 
     def dut_setup(self):
         print('@Running DUT SetUp...')
-        self.report.add_success(None, "Test2 DUT SetUp", '0', "Test2 DUT SetUp Output")
+        self.kenvironment.krepo.add_success(None, "Test2 DUT SetUp", '0', "Test2 DUT SetUp Output")
 
     def test_setup(self):
         print('@Running test Setup...')
-        self.report.add_success(None, "test2 SetUp", '0', "Test2 SetUp Output")
+        self.kenvironment.krepo.add_success(None, "test2 SetUp", '0', "Test2 SetUp Output")
 
     def test_body(self):
         print('@Running Main Test...')
-        self.report.start_tps_block('DATAQOS', '5-4-2')
-        self.report.add_success(None, "comando1_test2", '1', "output comando1 Test2 V3")
-        self.report.add_success(None, "comando2_test2", '1', "output comando2")
-        self.report.stop_tps_block('DATAQOS', '5-4-2')
-        self.report.start_tps_block('DATAQOS', '5-4-3')
-        self.report.add_failure(None, "comando3_test2", '1', "output comando3 TPS V3", "mmm")
-        self.report.stop_tps_block('DATAQOS', '5-4-3')
+        self.start_tps_block(NE1.id, 'DATAQOS', '5-4-2')
+        self.kenvironment.krepo.add_success(None, "comando1_test2", '1', "output comando1 Test2 V3")
+        self.kenvironment.krepo.add_success(None, "comando2_test2", '1', "output comando2")
+        self.stop_tps_block(NE1.id, 'DATAQOS', '5-4-2')
+        self.start_tps_block(NE1.id,'DATAQOS', '5-4-3')
+        self.add_failure(None, "comando3_test2", '1', "output comando3 TPS V3", "mmm")
+        self.stop_tps_block(NE1.id, 'DATAQOS', '5-4-3')
 
     def test_cleanup(self):
         print('@Running Test cleanUp...')
-        self.report.add_success(None, "test2 CleanUp", '0', "test2 CleanUp Output")
+        self.kenvironment.krepo.add_success(None, "test2 CleanUp", '0', "test2 CleanUp Output")
 
     def dut_cleanup(self):
 
         print('@Running DUT cleanUp...')
-        self.report.add_success(None, "test2 DUTCleanUp", '0', "test2 DUTCleanUp Output")
+        self.kenvironment.krepo.add_success(None, "test2 DUTCleanUp", '0', "test2 DUTCleanUp Output")
 
 
 
@@ -78,4 +83,5 @@ class Test(TestCase):
 if __name__ == "__main__":
     #initializing the Test object instance and run the main flow
     CTEST = Test(__file__)
+    NE1 = Eqpt1850TSS320('NE1', CTEST.kenvironment)
     CTEST.run()
