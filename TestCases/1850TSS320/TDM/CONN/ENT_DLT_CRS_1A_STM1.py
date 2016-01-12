@@ -28,7 +28,7 @@ from katelibs.instrumentONT     import InstrumentONT
 #from katelibs.instrumentSPIRENT  import InstrumentSPIRENT
 from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1 import TL1message
-
+import time
 
 class Test(TestCase):
     '''
@@ -72,8 +72,8 @@ class Test(TestCase):
         '''
         #self.kenvironment.krepo.start_tps_block("EM", "1-2-3")
 
-        #ONT5xx.init_instrument("P1")
-        #ONT5xx.init_instrument("P2")
+        ONT5xx.init_instrument("P1")
+        ONT5xx.init_instrument("P2")
 
 
     def test_body(self):
@@ -187,38 +187,47 @@ class Test(TestCase):
         print("\n\n\n\n\nTESTING ONT5xx SECTION STOP **************************************")
         '''
         print("\n**************** START ****************")
-        NE1.tl1.do("RTRV-EQPT::ALL;")
         S1=NE1.get_preset("S1")
         S2=NE1.get_preset("S2")
         NE1.tl1.do("ED-AU4::STM1AU4-{}-1::::POM=Y,EGPOM=Y;".format(S1))
         NE1.tl1.do("ED-AU4::STM1AU4-{}-1::::POM=Y,EGPOM=Y;".format(S2))
+        #time.sleep(5)
         
-        #ONT5xx.get_set_tx_bit_rate("P1", "STM1")
-        #ONT5xx.get_set_tx_bit_rate("P2", "STM1")
+        ONT5xx.get_set_tx_bit_rate("P1", "STM1")
+        ONT5xx.get_set_tx_bit_rate("P2", "STM1")
         
-        #ONT5xx.get_set_rx_channel_mapping_size("P1", "VC4")
-        #ONT5xx.get_set_rx_channel_mapping_size("P2", "VC4")
+        ONT5xx.get_set_rx_channel_mapping_size("P1", "VC4")
+        ONT5xx.get_set_rx_channel_mapping_size("P2", "VC4")
         
-        #ONT5xx.get_set_tx_channel_mapping_size("P1", "VC4")
-        #ONT5xx.get_set_tx_channel_mapping_size("P2", "VC4")
+        ONT5xx.get_set_tx_channel_mapping_size("P1", "VC4")
+        ONT5xx.get_set_tx_channel_mapping_size("P2", "VC4")
 
-        #ONT5xx.get_set_laser_status("P1", "ON")
-        #ONT5xx.get_set_laser_status("P2", "ON")
+        ONT5xx.get_set_laser_status("P1", "ON")
+        ONT5xx.get_set_laser_status("P2", "ON")
 
-        NE1.tl1.do("RTRV-COND-VC4::STM1AU4-{}-1:::UNEQ-P;".format(S1))
+        zq_tl1_res=NE1.tl1.do("RTRV-COND-VC4::STM1AU4-{}-1:::UNEQ-P;".format(S1))
+        print("zq_tl1_res = {}".format(zq_tl1_res))
+
         zq_msg=NE1.tl1.get_last_outcome()
-        print("message {}".format(zq_msg))
+        print("zq_msg = {}".format(zq_msg))
 
-        mm = TL1message(NE1.tl1.get_last_outcome())
+        zq_msg = TL1message(NE1.tl1.get_last_outcome())
+        print(zq_msg.get_cmd_attr_value("1", 2))
 
-        print(mm.get_cmd_attr_value("1", 2))
+        zq_tl1_res=NE1.tl1.do("RTRV-COND-VC4::STM1AU4-{}-1:::UNEQ-P;".format(S2))
+        print("zq_tl1_res = {}".format(zq_tl1_res))
 
-        """zq_msg=NE1.tl1.get_last_outcome()
-        print("message {}".format(zq_msg))
-        print(zq_msg.get_cmd_attr_value("STM1AU4-{}-1".format(S1),2))
-        #print("zq_res: [{}]".format(zq_res))
-        """
-        NE1.tl1.do("RTRV-COND-VC4::STM1AU4-{}-1:::URU-P;".format(S2))
+        zq_msg=NE1.tl1.get_last_outcome()
+        print("zq_msg = {}".format(zq_msg))
+
+        zq_msg = TL1message(NE1.tl1.get_last_outcome())
+        print(zq_msg.get_cmd_attr_value("1", 2))
+
+        zq_alm_ary = ONT5xx.retrieve_ho_alarms("P1")
+        print("zq_alm_ary: [{}]".format(zq_alm_ary))
+        
+        zq_alm_ary = ONT5xx.retrieve_ho_alarms("P2")
+        print("zq_alm_ary: [{}]".format(zq_alm_ary))
 
         NE1.tl1.do("ED-AU4::STM1AU4-{}-1::::POM=N,EGPOM=N;".format(S1))
         NE1.tl1.do("ED-AU4::STM1AU4-{}-1::::POM=N,EGPOM=N;".format(S2))
@@ -230,8 +239,8 @@ class Test(TestCase):
         '''
         test Cleanup Section implementation
         insert CleanUp code for your test below        '''
-        #ONT5xx.deinit_instrument("P1")
-        #ONT5xx.deinit_instrument("P2")
+        ONT5xx.deinit_instrument("P1")
+        ONT5xx.deinit_instrument("P2")
 
 
 
