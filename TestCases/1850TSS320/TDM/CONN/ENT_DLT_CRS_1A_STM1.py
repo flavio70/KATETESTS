@@ -5,11 +5,11 @@ TestCase template for K@TE test developers
   :field Description: TDM Test1
 
 	
-  :field Topology: 5.
+  :field Topology: 5
   
   :field Dependency: "None".
   
-  :field Lab: SVT.
+  :field Lab: SVT
   
   :field TPS: CONN__5-3-3-1
 
