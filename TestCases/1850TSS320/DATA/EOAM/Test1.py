@@ -5,7 +5,7 @@ TestCase template for K@TE test developers
   :field Description: Test1 Description
 
 	
-  :field Topology: 2.
+  :field Topology: 2
   
   :field Dependency: "None".
   
