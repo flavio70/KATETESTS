@@ -1,23 +1,24 @@
 #!/usr/bin/env python
-'''
+"""
 TestCase template for K@TE test developers
 
-[DESCRIPTION]
-   Put your test decription here
-[DESCRIPTION]
-[TOPOLOGY] 1 [TOPOLOGY]
-[DEPENDENCY]
-   Insert Test dependencies
-[DEPENDENCY]
-[LAB] Insert the lab referneces i.e. SW,SVT [LAB]
-[TPS]
-   insert here the Test mapping
-[TPS]
-[RUNSECTIONS]
-   Insert here the sections developed in this test i.e.
-   DUTSet,testSet,testBody,testClean,DutClean,all
-[RUNSECTIONS]
-[AUTHOR] ippolf [AUTHOR]
+  :field Description: Test1 Description
+
+	
+  :field Topology: 2.
+  
+  :field Dependency: "None".
+  
+  :field Lab: SVT.
+  
+  :field TPS: DATAQOS__5-3-2
+  :field TPS: DATAQOS__5-3-3
+  :field TPS: PROVIDER__5-3-1
+  
+  :field RunSections: 11111 
+  
+  :field Author: ippolf
+"""
 
 '''
 
