@@ -1,0 +1,263 @@
+#!/usr/bin/env python
+
+
+"""Git pre-commit hook: reject KATE TestCase files (.py) with docstring not compliant with template
+and place in .git/hooks
+
+
+	KATE Testcase docstring template must include the following fields:
+	
+	
+		:field Description: Test1 Description row1
+		:field Description: Test1 Description row2
+		
+		...
+		
+		:field Description: Test1 Description rown
+		
+		:field Topology: K@TE Topology reference
+		:field Dependency: "Dependencies
+		
+		:field Lab: Lab reference
+		
+		:field TPS: AREANAME1__TPSID1 (using "__" as separator)
+		:field TPS: AREANAME2__TPSID2 (using "__" as separator)
+		
+		...
+		
+		:field TPS: AREANAMEn__TPSIDn (using "__" as separator)
+		
+		:field RunSections: [01]{5}
+		:field Author: K@TE User reference
+	
+	
+"""
+
+__author__  = "Flavio Ippolito"
+__version__ = "1.0.0"
+
+import sys
+import os
+import re
+from subprocess import Popen, PIPE
+from katelibs.database import *
+
+
+class bcolors:
+	"""
+	this class implements the ANSI COLOR escape codes
+	"""
+	ONBLUE = '\033[34m '
+	OKGREEN = '\033[32m '
+	WARNING = '\033[33m '
+	FAIL = '\033[31m '
+	ENDC = '\033[0m '
+	BOLD = '\033[1m '
+	UNDERLINE = '\033[4m '
+
+
+
+
+def check_testinfoformat(f,docinfo):
+	"""Check the docstring format compliances against the expected KATE format:
+		
+		
+		:field Description: Test1 Description row1
+		:field Description: Test1 Description row2
+		
+		...
+		
+		:field Description: Test1 Description rown
+		
+		:field Topology: K@TE Topology reference
+		:field Dependency: "Dependencies
+		
+		:field Lab: Lab reference
+		
+		:field TPS: AREANAME1__TPSID1 (using "__" as separator)
+		:field TPS: AREANAME2__TPSID2 (using "__" as separator)
+		
+		...
+		
+		:field TPS: AREANAMEn__TPSIDn (using "__" as separator)
+		
+		:field RunSections: [01]{5}
+		:field Author: K@TE User reference
+
+	"""
+	tpsexist=False
+	f = os.path.abspath(f).decode('ascii')
+	#print('entering check testinfo for %s'%f)
+	#print('docinfo: %s'%docinfo)
+	if re.match('.+__.+__\.py',f):return True
+	res = True
+	if not os.path.isfile(f): return res
+	if re.match('.*.py',f):
+		print('\n checking %s Metadata Format...\n'%f)
+		#print(docinfo)
+		#checking presence of all docinfo required fields
+		if docinfo is None:
+			print('\t\033[31m DocString data missing.\033[0m ')
+			res = False
+			return res
+		if 'Description'  not in docinfo: 
+			print('\t\033[31m Description field missing.\033[0m ')
+			res = False
+		if 'Topology' not in docinfo:
+			print('\t\033[31m Topology field missing.\033[0m ')
+			res = False
+		if 'Dependency' not in docinfo:
+			print('\t\033[31m Dependency field missing.\033[0m ')
+			res = False
+		if 'Lab' not in docinfo:
+			print('\t\033[31m Lab field missing.\033[0m ')
+			res = False
+		if 'TPS' not in docinfo:
+			print('\t\033[31m TPS field missing.\033[0m ')
+			res = False
+		if 'Author' not in docinfo:
+			print('\t\033[31m Author field missing.\033[0m ')
+			res = False
+		if 'RunSections' not in docinfo:
+			print('\t\033[31m RunSections field missing.\033[0m ')
+			res = False
+			
+		if not res: return False
+		
+		#checking now format of Runsection field
+		if not re.match('^[01]{5}$',docinfo['RunSections'].strip()):
+			print('\t\033[31m RunSection field: %s is not correctly formatted.\033[0m '%docinfo['RunSections'].strip())
+			res = False
+			return res
+		
+		#checking TPS format field
+		print('\n\tChecking TPS Section...')
+		for tpsitem in docinfo['TPS'].split():
+			tpsexist = True
+			tpssplit=tpsitem.split('__')
+			if len(tpssplit) != 2:
+				res= False
+				print('\t \033[31m Bad format for TPS: %s \033[0m '%tpsitem)
+			else:
+				#format is ok, check if the tpsblock is present inside the code
+				matchstr='.*start_tps_block\(.*, *[\'\"]'+tpssplit[0]+'[\'\"] *, *[\'\"]'+tpssplit[1]+'[\'\"] *\).*stop_tps_block\(.*, *[\'\"]'+tpssplit[0]+'[\'\"] *, *[\'\"]'+tpssplit[1]+'[\'\"] *\)'
+				if re.search(matchstr,open(f).read(),re.DOTALL):
+					print('\t\033[32m  tpsArea: %10s \ttpsId: %10s \t Matched against Tps block implementation \033[0m'%(tpssplit[0],tpssplit[1]))
+				else:
+					print('\t\033[31m  tpsArea: %10s \ttpsId: %10s \tDid Not Match against Tps block implementation \033[0m'%(tpssplit[0],tpssplit[1]))
+					res = False
+		if not tpsexist:
+			print("\t \033[31m TestCase doesn't contains any TPS id \033[0m")
+			res = False
+	return res
+
+
+
+
+def check_testinfodb(f,docinfo):
+	"""Check the docstring content consistency against the KATEDB Content
+		Checked fields: Author,Topology
+	"""
+	f = os.path.abspath(f).decode('ascii')
+	#print('entering check testinfo for %s'%f)
+	#print('dcinfo: %s'%docinfo)
+	if re.match('.+__.+__\.py',f):return True
+	res = True
+	if not os.path.isfile(f): return res
+	if re.match('.*.py',f):
+		print('\n checking %s Metadata consistency...'%f)
+		if not check_DB_Author(docinfo['Author']):
+			res = False
+			print('\t\033[31m Author:\t%10s \tDid not Match any K@TE DB entry.\033[0m '%docinfo['Author'])
+		else:
+			print('\t\033[32m Author:\t%10s \tMatched K@TE DB.\033[0m '%docinfo['Author'])
+		
+		if not check_DB_Topology(docinfo['Topology']):
+			res = False
+			print('\t\033[31m Topology:\t%10s \tDid not Match any K@TE DB entry.\033[0m '%docinfo['Topology'])
+		else:
+			print('\t\033[32m Topology:\t%10s \tMatched K@TE DB.\033[0m '%docinfo['Topology'])
+			
+	return res
+
+
+def get_testinfo(testpath):
+	""" 
+		get metadata from testcase
+		:param testpath: Full testcase path
+		
+		:return: Dictionary containing availables info fields
+		
+		Description,Topology,Dependency,Lab,TPS,RUnSections,Author
+	"""
+	import ast,re
+	res=None
+	testFullName = os.path.abspath(testpath).decode('ascii')
+	#print('TestFullPathName: %s'% testFullName)
+	if not os.path.isfile(testFullName): return res
+	M = ast.parse(''.join(open(testFullName)))
+	doc=ast.get_docstring(M)
+	
+	if doc is not None:
+		docre = re.findall(':field (.*)?',doc,re.MULTILINE)
+		docre=[i.split(':') for i in docre]
+		res={}
+		res['Description']=''
+		res['TPS']=''
+		for elem in docre:
+			if (elem[0] == "Description"):
+				#print('Description %s'%elem[1])
+				res['Description'] =  res['Description']  + re.sub('["\']+','',elem[1]) + '\n'
+			elif (elem[0] == "TPS"):
+				res['TPS'] =  res['TPS']  + re.sub('["\']+','',elem[1]) + '\n'
+			else:
+				res[elem[0]]=re.sub('["\']+','',elem[1])
+				#print( '%s %s' %(elem[0],elem[1]))
+	
+	return res
+
+
+def git_testcase_hook(verbose=False):
+	"""Git pre-commit hook: Return error testcases in the HEAD
+	revision don't match the requirements, succes (0) otherwise. You can bypass 
+	this hook by specifying '--no-verify' as an option in 'git commit'."""
+	if verbose: print (os.getcwd())
+	cmd = "git diff --name-only --cached"
+	kwargs = dict(args=cmd, shell=True, stdout=PIPE, cwd=os.getcwd())
+	if sys.platform.startswith("win"):
+		del kwargs["cwd"]
+		cmd = "pushd \"%s\" && " % os.getcwd() + cmd + " && popd"
+		kwargs["args"] = cmd
+					
+	git = Popen(**kwargs)
+	output = git.stdout.readlines()	
+	filesdocs = {f.rstrip(): get_testinfo(f.strip()) for f in output}
+
+	
+	print("\n\nChecking TestCase's Metadata Format...\n\n")
+	bad_format = [f.decode('ascii') for f,docinfo in filesdocs.items() if not check_testinfoformat(f,docinfo)] 
+	print("\n...Done!!\n\n")
+	
+	if bad_format:
+		msg = ("\033[31m ERROR:\033[0m  your commit contains %s files don't matching the metatadata Format \n\n%s" % ((len(bad_format)),"\n".join(sorted(bad_format))))
+		#msg = msg % (len(bad_format),"\n".join(sorted(bad_format)))
+		msg += "\n\nPlease check these files docinfo section content before commit\n"
+		msg += "\n\nUse the '--no-verify' option to by-pass this hook\n"
+		return msg
+	
+	print("\n\nChecking TestCase's Metadata K@TE DB Consistency...\n\n")
+	bad_consistency = [f.decode('ascii') for f,docinfo in filesdocs.items() if not check_testinfodb(f,docinfo)] 
+	print("\n...Done!!\n\n")
+	
+	if bad_consistency:
+		msg = ("\033[31m ERROR:\033[0m  your commit contains %s files don't matching the metatadata K@TE DB Consistency \n\n%s" % ((len(bad_consistency)),"\n".join(sorted(bad_consistency))))
+		#msg = msg % (len(bad_format),"\n".join(sorted(bad_format)))
+		msg += "\n\nPlease check these files docinfo section content before commit\n"
+		msg += "\n\nUse the '--no-verify' option to by-pass this hook\n"
+		return msg
+	
+	
+	return 0
+
+if __name__ == "__main__":
+	sys.exit(git_testcase_hook(True))
