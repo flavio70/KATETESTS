@@ -93,24 +93,29 @@ def QS_020_Delete_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq
 
 def QS_030_Create_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
     
-    zq_tu3_list=zq_xc_list[zq_vc4_1].split(',')
-    zq_tu3_idx1=zq_tu3_list[1].replace('MVC4','MVC4TU3')
+    zq_tu12_list=zq_xc_list[zq_vc4_1].split(',')
+    zq_tu12_tmp1=zq_tu12_list[1].replace('MVC4','MVC4TU12')
 
-    zq_tu3_list=zq_xc_list[zq_vc4_2].split(',')
-    zq_tu3_idx2=zq_tu3_list[1].replace('MVC4','MVC4TU3')
+    zq_tu12_list=zq_xc_list[zq_vc4_2].split(',')
+    zq_tu12_tmp2=zq_tu12_list[1].replace('MVC4','MVC4TU12')
 
     for zq_j in range (1,4):
-        zq_tl1_res=NE1.tl1.do("ENT-CRS-LOVC3::{}-{},{}-{}:::2WAY;".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j))
-        zq_msg=TL1message(NE1.tl1.get_last_outcome())
-        dprint(NE1.tl1.get_last_outcome(),1)
-        zq_cmd=zq_msg.get_cmd_status()
-        if zq_cmd == (True,'COMPLD'):
-            dprint("\nOK\tCross-connection successfully created from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_success(NE1, "Cross-connection creation successful {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),"0.0", "Cross-connection creation successful")
+        for zq_k in range(1,8):                                        #zq_k=TU12 index
+            for zq_m in range(1,4):
+                zq_tu12_idx1=zq_tu12_tmp1+'-'+str(zq_j)+'-'+str(zq_k)+'-'+str(zq_m)
+                zq_tu12_idx2=zq_tu12_tmp2+'-'+str(zq_j)+'-'+str(zq_k)+'-'+str(zq_m)
+                zq_tl1_res=NE1.tl1.do("ENT-CRS-LOVC12::{},{}:::2WAY;".format(zq_tu12_idx1,zq_tu12_idx2))
+                zq_msg=TL1message(NE1.tl1.get_last_outcome())
+                dprint(NE1.tl1.get_last_outcome(),1)
+                zq_cmd=zq_msg.get_cmd_status()
+                if zq_cmd == (True,'COMPLD'):
+                    dprint("\nOK\tCross-connection successfully created from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),2)
+                    zq_run.add_success(NE1, "Cross-connection creation successful {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),"0.0", "Cross-connection creation successful")
+    
+                else:
+                    dprint("\nKO\tCross-connection creation failed from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),2)
+                    zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail")
 
-        else:
-            dprint("\nKO\tCross-connection creation failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection creation failure")
 
     return
 
@@ -157,45 +162,53 @@ def QS_050_Modify_MVC4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_
 
 def QS_060_Delete_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
-    zq_tu3_list=zq_xc_list[zq_vc4_1].split(',')
-    zq_tu3_idx1=zq_tu3_list[1].replace('MVC4','MVC4TU3')
+    zq_tu12_list=zq_xc_list[zq_vc4_1].split(',')
+    zq_tu12_tmp1=zq_tu12_list[1].replace('MVC4','MVC4TU12')
 
-    zq_tu3_list=zq_xc_list[zq_vc4_2].split(',')
-    zq_tu3_idx2=zq_tu3_list[1].replace('MVC4','MVC4TU3')
+    zq_tu12_list=zq_xc_list[zq_vc4_2].split(',')
+    zq_tu12_tmp2=zq_tu12_list[1].replace('MVC4','MVC4TU12')
 
     for zq_j in range (1,4):
-        zq_tl1_res=NE1.tl1.do("DLT-CRS-LOVC3::{}-{},{}-{};".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j))
-        zq_msg=TL1message(NE1.tl1.get_last_outcome())
-        dprint(NE1.tl1.get_last_outcome(),1)
-        zq_cmd=zq_msg.get_cmd_status()
-        if zq_cmd == (True,'COMPLD'):
-            dprint("\nOK\tCross-connection successfully deleted from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_success(NE1, "Cross-connection successfully deleted from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),"0.0", "Cross-connection successfully deleted")
-
-        else:
-            dprint("\nKO\tCross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j))
-
+        for zq_k in range(1,8):                                        #zq_k=TU12 index
+            for zq_m in range(1,4):
+                zq_tu12_idx1=zq_tu12_tmp1+'-'+str(zq_j)+'-'+str(zq_k)+'-'+str(zq_m)
+                zq_tu12_idx2=zq_tu12_tmp2+'-'+str(zq_j)+'-'+str(zq_k)+'-'+str(zq_m)
+                zq_tl1_res=NE1.tl1.do("DLT-CRS-LOVC12::{},{};".format(zq_tu12_idx1,zq_tu12_idx2))
+                zq_msg=TL1message(NE1.tl1.get_last_outcome())
+                dprint(NE1.tl1.get_last_outcome(),1)
+                zq_cmd=zq_msg.get_cmd_status()
+                if zq_cmd == (True,'COMPLD'):
+                    dprint("\nOK\tCross-connection successfully deleted from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),2)
+                    zq_run.add_success(NE1, "Cross-connection successfully deleted from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),"0.0", "Cross-connection successfully deleted")
+    
+                else:
+                    dprint("\nKO\tCross-connection deletion failed from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),2)
+                    zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection deletion failed from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2))
+    
     return
 
 
 def QS_070_Enable_Disable_POM(zq_run, zq_mtx_slot, zq_vc4, zq_enadis):
 
+    zq_tu12_idx="MVC4TU12-{}-{}".format(zq_mtx_slot,str(zq_vc4))
     for zq_j in range (1,4):
-        zq_tl1_res=NE1.tl1.do("ED-TU3::MVC4TU3-{}-{}-{}::::POM={},EGPOM={};".format(zq_mtx_slot, zq_vc4, zq_j, zq_enadis, zq_enadis))
-        zq_msg=TL1message(NE1.tl1.get_last_outcome())
-        dprint(NE1.tl1.get_last_outcome(),1)
-        zq_cmd=zq_msg.get_cmd_status()
-    
-        if zq_cmd == (True,'COMPLD'):
-            dprint("\nOK\tPom and EGPOM setting to [{}] for MVC4TU3-{}-{}-{} successful".format(zq_enadis,zq_mtx_slot, zq_vc4, zq_j),2)
-            zq_run.add_success(NE1, "Pom and EGPOM setting to [{}] for MVC4TU3-{}-{}-{} successful".format(zq_enadis,zq_mtx_slot, zq_vc4, zq_j),"0.0", "Pom and EGPOM setting")
-    
-        else:
-            dprint("\nKO\tPom and EGPOM setting to [{}] for MVC4TU3-{}-{}-{} failed".format(zq_enadis,zq_mtx_slot, zq_vc4, zq_j),2)
-            zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Pom and EGPOM setting to [{}] for MVC4TU3-{}-{}-{} failed".format(zq_enadis,zq_mtx_slot, zq_vc4, zq_j))
-        
+        for zq_m in range (1,8):
+            for zq_l in range (1,4):
+                zq_tl1_res=NE1.tl1.do("ED-TU12::{}-{}-{}-{}::::POM={},EGPOM={};".format(zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l), zq_enadis, zq_enadis))
+                zq_msg=TL1message(NE1.tl1.get_last_outcome())
+                dprint(NE1.tl1.get_last_outcome(),1)
+                zq_cmd=zq_msg.get_cmd_status()
+            
+                if zq_cmd == (True,'COMPLD'):
+                    dprint("\nOK\tPom and EGPOM setting to [{}] for {}-{}-{}-{} successful".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),2)
+                    zq_run.add_success(NE1, "Pom and EGPOM setting to [{}] for {}-{}-{} successful".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),"0.0", "Pom and EGPOM setting")
+            
+                else:
+                    dprint("\nKO\tPom and EGPOM setting to [{}] for {}-{}-{}-{} failed".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),2)
+                    zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Pom and EGPOM setting to [{}] for {}-{}-{}-{} failed".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)))
+                
     return
+
 
 def QS_80_Check_ONT_Alarm(zq_run, zq_ont_port, zq_alm_exp):
 
@@ -285,9 +298,9 @@ def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
     return
 
 
-def QS_150_Check_No_Alarm(zq_run,zq_vc3_range):
+def QS_150_Check_No_Alarm(zq_run,zq_vc12_range):
 
-    zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC3::{};".format(zq_vc3_range))
+    zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC12::{};".format(zq_vc12_range))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     dprint(NE1.tl1.get_last_outcome(),1)
     if (zq_msg.get_cmd_response_size() == 0):
@@ -367,12 +380,12 @@ class Test(TestCase):
         E_VC4_3_2 = 356     # 320<x<385
 
         #MVC4TU3-1-1-7-<MVC4>-1&&-3
-        E_COND_AID_BK1_1 = "MVC4TU12-{}-{}-1&&-3".format(NE1_M1,str(E_VC4_1_1))
-        E_COND_AID_BK1_2 = "MVC4TU12-{}-{}-1&&-3".format(NE1_M1,str(E_VC4_1_2))
-        E_COND_AID_BK2_1 = "MVC4TU12-{}-{}-1&&-3".format(NE1_M1,str(E_VC4_2_1))
-        E_COND_AID_BK2_2 = "MVC4TU12-{}-{}-1&&-3".format(NE1_M1,str(E_VC4_2_2))
-        E_COND_AID_BK3_1 = "MVC4TU12-{}-{}-1&&-3".format(NE1_M1,str(E_VC4_3_1))
-        E_COND_AID_BK3_2 = "MVC4TU12-{}-{}-1&&-3".format(NE1_M1,str(E_VC4_3_2))
+        E_COND_AID_BK1_1 = "MVC4TU12-{}-{}-1&&-3-1&&-7-1&&-3".format(NE1_M1,str(E_VC4_1_1))
+        E_COND_AID_BK1_2 = "MVC4TU12-{}-{}-1&&-3-1&&-7-1&&-3".format(NE1_M1,str(E_VC4_1_2))
+        E_COND_AID_BK2_1 = "MVC4TU12-{}-{}-1&&-3-1&&-7-1&&-3".format(NE1_M1,str(E_VC4_2_1))
+        E_COND_AID_BK2_2 = "MVC4TU12-{}-{}-1&&-3-1&&-7-1&&-3".format(NE1_M1,str(E_VC4_2_2))
+        E_COND_AID_BK3_1 = "MVC4TU12-{}-{}-1&&-3-1&&-7-1&&-3".format(NE1_M1,str(E_VC4_3_1))
+        E_COND_AID_BK3_2 = "MVC4TU12-{}-{}-1&&-3-1&&-7-1&&-3".format(NE1_M1,str(E_VC4_3_2))
         
         zq_mtxlo_slot=NE1_M1
         NE1_stm64p1=NE1_S1
@@ -453,6 +466,76 @@ class Test(TestCase):
         NE1_stm64p5 = (''.join(zq_board_to_remove[2]).replace('10GSO-',''))+'-1'
         NE1_stm64p6 = (''.join(zq_board_to_remove[3]).replace('10GSO-',''))+'-1'
         
+
+        print("\n**************************************************************************************")
+        print("\n   CHECK SSF/AIS/LOP CONDITION ALARM FOR SIX MVC4TU3 FACILITIES IN 1st 128 BLOCK      ")
+        print("\n**************************************************************************************")
+        '''
+        CHECK FIRST 128 BLOCK of MVC4TU12 
+        '''
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_040_Modify_AU4_HO_Trace_Block(self, NE1_stm64p1, (E_VC4_1_1 % E_BLOCK_SIZE), 1, E_HO_TI)
+        QS_040_Modify_AU4_HO_Trace_Block(self, NE1_stm64p2, (E_VC4_1_2 % E_BLOCK_SIZE), 1, E_HO_TI)
+        
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_1_1, 1, E_HO_TI)
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_1_2, 1, E_HO_TI)
+        
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_2, "Y")
+        
+        QS_030_Create_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
+
+        '''
+        Configure both ONT ports to VC12 mapping
+        '''
+        ONT.get_set_tx_bit_rate(ONT_P1, "STM64")
+        ONT.get_set_tx_bit_rate(ONT_P2, "STM64")
+        
+        ONT.get_set_rx_channel_mapping_size(ONT_P1, "VC12")
+        ONT.get_set_rx_channel_mapping_size(ONT_P2, "VC12")
+        
+        ONT.get_set_tx_channel_mapping_size(ONT_P1, "VC12")
+        ONT.get_set_tx_channel_mapping_size(ONT_P2, "VC12")
+
+        ONT.get_set_laser_status(ONT_P1, "ON")
+        ONT.get_set_laser_status(ONT_P2, "ON")
+
+        ONT.get_set_clock_reference_source(ONT_P1, "RX")
+        ONT.get_set_clock_reference_source(ONT_P2, "RX")
+        
+        ONT.get_set_background_channels_fill_mode(ONT_P1, "FIX")
+        ONT.get_set_background_channels_fill_mode(ONT_P2, "FIX")
+
+        time.sleep(E_WAIT)
+        
+        '''
+        INITIAL CHECK NO ALARM PRESENT ON PATH AFTER LO CROSS-CONNECTIONS ARE CREATED 
+        '''
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+
+        #QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TULOP")
+        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
+        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+        
+        #QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TUAIS")
+        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
+        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+        
+
+        QS_060_Delete_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
+
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_2, "N")
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
+
+
+
+
         
         
         
