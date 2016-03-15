@@ -2,11 +2,14 @@
 """
 TestCase template for K@TE test developers
 
-:field Description: Verify the detection of SSF alarm on MVC4TU3 facilities.
+:field Description: Verify the detection of SSF-V, AIS-V, LOP-V alarm on MVC4TU3 facilities and.
+:field Description: TU-AIS, TU-LOP on instrument side.
 :field Topology: 5
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5.2.17.1
+:field TPS: FM__5.2.26.1
+:field TPS: FM__5.2.28.1
 :field RunSections: 11111
 :field Author: tosima 
 
@@ -17,7 +20,6 @@ from katelibs.eqpt1850tss320    import Eqpt1850TSS320
 from katelibs.instrumentONT     import InstrumentONT
 from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import *
-import time
 import time
 import string
 import math
@@ -195,15 +197,31 @@ def QS_070_Enable_Disable_POM(zq_run, zq_mtx_slot, zq_vc4, zq_enadis):
         
     return
 
+def QS_80_Check_ONT_Alarm(zq_run, zq_ont_port, zq_alm_exp):
 
-def QS_90_Check_MVC4TU3_SSF(zq_run,zq_vc3,zq_man_exp,zq_type_exp,zq_dir_exp):
+    ONT.start_measurement(zq_ont_port)
+    time.sleep(E_WAIT)
+    ONT.halt_measurement(zq_ont_port)
+    zq_alm = ONT.retrieve_ho_lo_alarms(zq_ont_port)
+    if zq_alm[0] == True:
+        if zq_alm[1][0] == zq_alm_exp:
+            dprint("OK\t{} Alarm found on ONT port {}".format(zq_alm_exp,zq_ont_port),2)
+            zq_run.add_success(NE1, "{} Alarm found on ONT port {}".format(zq_alm_exp,zq_ont_port),"0.0", "ONT Alarm check")
+        else:
+            dprint("KO\tAlarm mismatch on ONT port {}:".format(zq_ont_port),2)
+            dprint("\t\tAlarm: Exp [{}]  - Rcv [{}]".format(zq_alm_exp,zq_alm[1][0]),2)
+            zq_run.add_failure(NE1,  "ONT Alarm check","0.0", "ONT Alarms check", "Alarm mismatch on ONT port {}: Exp [{}]  - Rcv [{}]".format(zq_ont_port, zq_alm_exp, zq_alm[1][0]))
+
+    return
+
+def QS_90_Check_MVC4TU3_Alarm(zq_run,zq_vc3,zq_man_exp,zq_type_exp,zq_dir_exp):
 
     zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC3::{}:::{};".format(str(zq_vc3),zq_man_exp))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     dprint(NE1.tl1.get_last_outcome(),1)
     if (zq_msg.get_cmd_response_size() == 0):
-        dprint("KO\tSSF Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_vc3, E_RFI_NUM),2)
-        zq_run.add_failure(NE1,"SSF Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_vc3, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0]".format(E_RFI_NUM))
+        dprint("KO\t{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),2)
+        zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0]".format(E_RFI_NUM))
     else:
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'COMPLD'):
@@ -211,25 +229,25 @@ def QS_90_Check_MVC4TU3_SSF(zq_run,zq_vc3,zq_man_exp,zq_type_exp,zq_dir_exp):
             zq_type = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 6)
             zq_dir = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 7)
             if (zq_man == zq_man_exp) and (zq_type == zq_type_exp) and (zq_dir == zq_dir_exp):
-                dprint("OK\tSSF Condition verification successful for {} facility.".format(str(zq_vc3)),2)
-                zq_run.add_success(NE1, "SSF Condition verification successful for {} facility.".format(str(zq_vc3)),"0.0", "SSF CONDITION CHECK")
+                dprint("OK\t{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc3)),2)
+                zq_run.add_success(NE1, "{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc3)),"0.0", "{} CONDITION CHECK".format(zq_man_exp))
             else:
-                dprint("KO\tSSF Condition verification failure for {} facility.".format(str(zq_vc3)),2)
+                dprint("KO\t{} Condition verification failure for {} facility.".format(zq_man_exp, str(zq_vc3)),2)
                 dprint("\t\tCOND: Exp [{}]  - Rcv [{}]".format(zq_man_exp,zq_man),2)
                 dprint("\t\tTYPE: Exp [{}] - Rcv [{}]".format(zq_type_exp,zq_type),2)
                 dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir),2)
-                zq_run.add_failure(NE1,"SSF Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(str(zq_vc3),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(str(zq_vc3),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir))
+                zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc3),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir),"0.0", "{} CONDITION CHECK".format(zq_man_exp),"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc3),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir))
         
     return
 
 
 def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4_2, zq_alm_type):
     
-    ONT.get_set_alarm_insertion_mode("P1", "LO", "CONT")
-    ONT.get_set_alarm_insertion_mode("P2", "LO", "CONT")
+    ONT.get_set_alarm_insertion_mode(zq_ONT_p1, "LO", "CONT")
+    ONT.get_set_alarm_insertion_mode(zq_ONT_p2, "LO", "CONT")
 
-    ONT.get_set_alarm_insertion_type("P1", zq_alm_type)
-    ONT.get_set_alarm_insertion_type("P2", zq_alm_type)
+    ONT.get_set_alarm_insertion_type(zq_ONT_p1, zq_alm_type)
+    ONT.get_set_alarm_insertion_type(zq_ONT_p2, zq_alm_type)
 
     for zq_j in range(1,4):
         zq_tu3_ch1="{}.{}.1.1".format(str(zq_vc4_1 % E_BLOCK_SIZE),str(zq_j))
@@ -247,20 +265,22 @@ def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
         ONT.get_set_tx_lo_measure_channel(zq_ONT_p2, zq_tu3_ch2)
         
         ONT.get_set_alarm_insertion_activation("P1","LO","ON")
-    
-        time.sleep(E_WAIT)
-    
-        QS_90_Check_MVC4TU3_SSF(zq_run,zq_tu3_idx1,"SSF-V","NEND","RCV")
+        
+        QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p2, "TU-AIS")
+
+        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx1,"SSF-V","NEND","RCV")
+        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx1, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
     
         ONT.get_set_alarm_insertion_activation("P1","LO","OFF")
         ONT.get_set_alarm_insertion_activation("P2","LO","ON")
             
-        time.sleep(E_WAIT)
+        QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p1, "TU-AIS")
             
-        QS_90_Check_MVC4TU3_SSF(zq_run,zq_tu3_idx2,"SSF-V","NEND","RCV")
+        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx2,"SSF-V","NEND","RCV")
+        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx2, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
                 
         ONT.get_set_alarm_insertion_activation("P2","LO","OFF")
-        time.sleep(E_WAIT)
+        time.sleep(E_WAIT+5)
     
     return
 
@@ -325,13 +345,15 @@ class Test(TestCase):
         '''
         print("\n******************** START ********************")
         '''
-        VERIFY DETECTION OF SSF CONDITION ALARM IN MVC4 FACILITIES
+        VERIFY DETECTION OF SSF/AIS/LOP CONDITION ALARM IN MVC4 FACILITIES
         '''
-        print("\n*******************************************************************")
-        print("\n   VERIFY DETECTION OF SSF CONDITION ALARM IN MVC4TU3 FACILITIES   ")
-        print("\n*******************************************************************")
+        print("\n***************************************************************************")
+        print("\n   VERIFY DETECTION OF SSF/AIS/LOP CONDITION ALARM IN MVC4TU3 FACILITIES   ")
+        print("\n***************************************************************************")
         
         self.start_tps_block(NE1.id,"FM", "5-2-17-1")
+        self.start_tps_block(NE1.id,"FM", "5-2-26-1")
+        self.start_tps_block(NE1.id,"FM", "5-2-28-1")
 
         E_LO_MTX = "MXH60GLO"
         E_HO_TI = 'X4F4E5420484F2D5452414345202020' #'ONT HO-TRACE   '
@@ -603,6 +625,8 @@ class Test(TestCase):
 
 
         self.stop_tps_block(NE1.id,"FM", "5-2-17-1")
+        self.stop_tps_block(NE1.id,"FM", "5-2-26-1")
+        self.stop_tps_block(NE1.id,"FM", "5-2-28-1")
     
     
     
