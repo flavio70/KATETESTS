@@ -547,7 +547,7 @@ if __name__ == "__main__":
 
     #initializing all local variable and constants used by Test object
     NE1 = Eqpt1850TSS320('NE1', CTEST.kenvironment)
-    ONT = InstrumentONT('ONT', CTEST.kenvironment)
+    ONT = InstrumentONT('ONT1', CTEST.kenvironment)
     CTEST.add_eqpt(NE1)
 
     # Run Test main flow

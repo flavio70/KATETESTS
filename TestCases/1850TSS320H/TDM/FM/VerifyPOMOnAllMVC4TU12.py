@@ -553,7 +553,7 @@ if __name__ == "__main__":
     NE1_M1=NE1.get_preset("M1")
     NE1_S1=NE1.get_preset("S1")
     NE1_S2=NE1.get_preset("S2")
-    ONT=InstrumentONT('ONT', CTEST.kenvironment)
+    ONT=InstrumentONT('ONT1', CTEST.kenvironment)
     ONT_P1="P1"
     ONT_P2="P2"
     CTEST.add_eqpt(NE1)

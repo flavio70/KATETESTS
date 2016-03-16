@@ -251,28 +251,28 @@ def QS_100_Check_RDI(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
                 ONT.get_set_tx_lo_measure_channel(zq_ONT_p1, zq_tu12_ch1)
                 ONT.get_set_tx_lo_measure_channel(zq_ONT_p2, zq_tu12_ch2)
                 
-                ONT.get_set_alarm_insertion_mode("P1", "LO", "CONT")
-                ONT.get_set_alarm_insertion_mode("P2", "LO", "CONT")
+                ONT.get_set_alarm_insertion_mode(zq_ONT_p1, "LO", "CONT")
+                ONT.get_set_alarm_insertion_mode(zq_ONT_p2, "LO", "CONT")
         
-                ONT.get_set_alarm_insertion_type("P1", "LPRDI")
-                ONT.get_set_alarm_insertion_type("P2", "LPRDI")
+                ONT.get_set_alarm_insertion_type(zq_ONT_p1, "LPRDI")
+                ONT.get_set_alarm_insertion_type(zq_ONT_p2, "LPRDI")
         
-                ONT.get_set_alarm_insertion_activation("P1","LO","ON")
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p1,"LO","ON")
         
                 time.sleep(10)
         
                 QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx1,"RFI","FEND","RCV")
                 QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx2,"RFI","FEND","TRMT")
                 
-                ONT.get_set_alarm_insertion_activation("P1","LO","OFF")
-                ONT.get_set_alarm_insertion_activation("P2","LO","ON")
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p1,"LO","OFF")
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p2,"LO","ON")
         
                 time.sleep(10)
         
                 QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx1,"RFI","FEND","TRMT")
                 QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx2,"RFI","FEND","RCV")
             
-                ONT.get_set_alarm_insertion_activation("P2","LO","OFF")
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p2,"LO","OFF")
     
     
     return

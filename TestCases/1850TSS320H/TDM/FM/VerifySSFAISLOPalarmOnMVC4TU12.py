@@ -28,6 +28,15 @@ E_RFI_NUM = 1
 E_BLOCK_SIZE = 64        
 E_WAIT = 5
 
+#CHANGE THIS LISTS TO RANGE IN MORE LOVC12, ACCORDING TO SDH SPECIFICATION
+#TUG3 range from 1..3
+#TUG2 range from 1..7
+#TU12 range from 1..3
+E_TUG3 = [1,2,3]
+E_TUG2 = [4]
+E_TU12 = [1,3]
+
+
 def dprint(zq_str,zq_level):
     '''
     # print debug level:  0=no print
@@ -227,34 +236,35 @@ def QS_80_Check_ONT_Alarm(zq_run, zq_ont_port, zq_alm_exp):
 
     return
 
-def QS_90_Check_MVC4TU3_Alarm(zq_run,zq_vc3,zq_man_exp,zq_type_exp,zq_dir_exp):
+def QS_90_Check_MVC4TU12_Alarm(zq_run,zq_vc12,zq_man_exp,zq_type_exp,zq_dir_exp):
 
-    zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC3::{}:::{};".format(str(zq_vc3),zq_man_exp))
+    zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC12::{}:::{};".format(str(zq_vc12),zq_man_exp))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     dprint(NE1.tl1.get_last_outcome(),1)
     if (zq_msg.get_cmd_response_size() == 0):
-        dprint("KO\t{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),2)
-        zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0]".format(E_RFI_NUM))
+        dprint("KO\t{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc12, E_RFI_NUM),2)
+        zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc12, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0]".format(E_RFI_NUM))
     else:
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'COMPLD'):
-            zq_man = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 2)
-            zq_type = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 6)
-            zq_dir = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 7)
+            zq_man = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc12), 2)
+            zq_type = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc12), 6)
+            zq_dir = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc12), 7)
             if (zq_man == zq_man_exp) and (zq_type == zq_type_exp) and (zq_dir == zq_dir_exp):
-                dprint("OK\t{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc3)),2)
-                zq_run.add_success(NE1, "{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc3)),"0.0", "{} CONDITION CHECK".format(zq_man_exp))
+                dprint("OK\t{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc12)),2)
+                zq_run.add_success(NE1, "{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc12)),"0.0", "{} CONDITION CHECK".format(zq_man_exp))
             else:
-                dprint("KO\t{} Condition verification failure for {} facility.".format(zq_man_exp, str(zq_vc3)),2)
+                dprint("KO\t{} Condition verification failure for {} facility.".format(zq_man_exp, str(zq_vc12)),2)
                 dprint("\t\tCOND: Exp [{}]  - Rcv [{}]".format(zq_man_exp,zq_man),2)
                 dprint("\t\tTYPE: Exp [{}] - Rcv [{}]".format(zq_type_exp,zq_type),2)
                 dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir),2)
-                zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc3),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir),"0.0", "{} CONDITION CHECK".format(zq_man_exp),"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc3),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir))
+                zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc12),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir),"0.0", "{} CONDITION CHECK".format(zq_man_exp),"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc12),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir))
         
     return
 
 
 def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4_2, zq_alm_type):
+    
     
     ONT.get_set_alarm_insertion_mode(zq_ONT_p1, "LO", "CONT")
     ONT.get_set_alarm_insertion_mode(zq_ONT_p2, "LO", "CONT")
@@ -262,39 +272,39 @@ def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
     ONT.get_set_alarm_insertion_type(zq_ONT_p1, zq_alm_type)
     ONT.get_set_alarm_insertion_type(zq_ONT_p2, zq_alm_type)
 
-    for zq_j in range(1,4):
-        zq_tu3_ch1="{}.{}.1.1".format(str(zq_vc4_1 % E_BLOCK_SIZE),str(zq_j))
-        zq_tu3_ch2="{}.{}.1.1".format(str(zq_vc4_2 % E_BLOCK_SIZE),str(zq_j))
-         
-        #"MVC4-1-1-7-92-1,LOVC3:NR,SSF-P,SA,07-29,13-12-21,NEND,RCV"
-    
-        zq_tu3_idx1="MVC4TU3-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_1),str(zq_j))
-        zq_tu3_idx2="MVC4TU3-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_2),str(zq_j))
-    
-        ONT.get_set_rx_lo_measure_channel(zq_ONT_p1, zq_tu3_ch1)
-        ONT.get_set_rx_lo_measure_channel(zq_ONT_p2, zq_tu3_ch2)
-    
-        ONT.get_set_tx_lo_measure_channel(zq_ONT_p1, zq_tu3_ch1)
-        ONT.get_set_tx_lo_measure_channel(zq_ONT_p2, zq_tu3_ch2)
-        
-        ONT.get_set_alarm_insertion_activation("P1","LO","ON")
-        
-        QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p2, "TU-AIS")
+    for zq_j in  E_TUG3:
+        for zq_m in E_TUG2:
+            for zq_l in E_TU12:
+                zq_tu12_ch1="{}.{}.{}.{}".format(str(zq_vc4_1 % E_BLOCK_SIZE),str(zq_j),str(zq_m),str(zq_l))
+                zq_tu12_ch2="{}.{}.{}.{}".format(str(zq_vc4_2 % E_BLOCK_SIZE),str(zq_j),str(zq_m),str(zq_l))
 
-        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx1,"SSF-V","NEND","RCV")
-        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx1, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
-    
-        ONT.get_set_alarm_insertion_activation("P1","LO","OFF")
-        ONT.get_set_alarm_insertion_activation("P2","LO","ON")
+                zq_tu12_idx1="MVC4TU12-{}-{}-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_1),str(zq_j),str(zq_m),str(zq_l))
+                zq_tu12_idx2="MVC4TU12-{}-{}-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_2),str(zq_j),str(zq_m),str(zq_l))
+
+                ONT.get_set_rx_lo_measure_channel(zq_ONT_p1, zq_tu12_ch1)
+                ONT.get_set_rx_lo_measure_channel(zq_ONT_p2, zq_tu12_ch2)
             
-        QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p1, "TU-AIS")
-            
-        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx2,"SSF-V","NEND","RCV")
-        QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx2, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
+                ONT.get_set_tx_lo_measure_channel(zq_ONT_p1, zq_tu12_ch1)
+                ONT.get_set_tx_lo_measure_channel(zq_ONT_p2, zq_tu12_ch2)
+        
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p1,"LO","ON")
                 
-        ONT.get_set_alarm_insertion_activation("P2","LO","OFF")
-        time.sleep(E_WAIT+5)
-    
+                QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p2, "TU-AIS")
+        
+                QS_90_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx1,"SSF-V","NEND","RCV")
+                QS_90_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx1, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
+            
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p1,"LO","OFF")
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p2,"LO","ON")
+                    
+                QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p1, "TU-AIS")
+                    
+                QS_90_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx2,"SSF-V","NEND","RCV")
+                QS_90_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx2, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
+                        
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p2,"LO","OFF")
+                time.sleep(E_WAIT+5)
+            
     return
 
 
@@ -467,9 +477,9 @@ class Test(TestCase):
         NE1_stm64p6 = (''.join(zq_board_to_remove[3]).replace('10GSO-',''))+'-1'
         
 
-        print("\n**************************************************************************************")
-        print("\n   CHECK SSF/AIS/LOP CONDITION ALARM FOR SIX MVC4TU3 FACILITIES IN 1st 128 BLOCK      ")
-        print("\n**************************************************************************************")
+        print("\n***************************************************************************************")
+        print("\n   CHECK SSF/AIS/LOP CONDITION ALARM FOR SIX MVC4TU12 FACILITIES IN 1st 128 BLOCK      ")
+        print("\n***************************************************************************************")
         '''
         CHECK FIRST 128 BLOCK of MVC4TU12 
         '''
@@ -516,13 +526,13 @@ class Test(TestCase):
         QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
         QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
 
-        #QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TULOP")
-        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
-        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+        QS_100_Check_SSF(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TULOP")
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
         
-        #QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TUAIS")
-        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
-        #QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+        QS_100_Check_SSF(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TUAIS")
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
         
 
         QS_060_Delete_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
@@ -533,12 +543,115 @@ class Test(TestCase):
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
 
+        print("\n***************************************************************************************")
+        print("\n   CHECK SSF/AIS/LOP CONDITION ALARM FOR SIX MVC4TU12 FACILITIES IN 2nd 128 BLOCK      ")
+        print("\n***************************************************************************************")
+        '''
+        CHECK SECOND 128 BLOCK of MVC4TU12 
+        '''
+        zq_xc_list=list()
+        zq_xc_list.append("EMPTY,EMPTY")
 
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p4, 1, E_BLOCK_SIZE, zq_xc_list)
 
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
 
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_1, 1, E_HO_TI)
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_2, 1, E_HO_TI)
+
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_2, "Y")
+
+        QS_030_Create_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
+
+        time.sleep(E_WAIT)
         
+        '''
+        INITIAL CHECK NO ALARM PRESENT ON PATH AFTER HO CROSS-CONNECTIONS ARE CREATED 
+        '''
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_2)
         
+        QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2,"TULOP")
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_2)
         
+        QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2,"TUAIS")
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_2)
+ 
+        
+        QS_060_Delete_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
+
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_2, "N")
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p4, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, E_BLOCK_SIZE*2+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE*3+1, E_BLOCK_SIZE, zq_xc_list)
+        
+
+        print("\n****************************************************************************************")
+        print("\n    CHECK SSF/AIS/LOP CONDITION ALARM FOR SIX MVC4TU12 FACILITIES IN 3ND 128 BLOCK      ")
+        print("\n****************************************************************************************")
+        '''
+        CHECK THIRD 128 BLOCK of MVC4/TU12 
+        '''
+        zq_xc_list=list()
+        zq_xc_list.append("EMPTY,EMPTY")
+
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p5, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p6, 1, E_BLOCK_SIZE, zq_xc_list)
+        
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p4, 1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
+        
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_1, 1, E_HO_TI)
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_2, 1, E_HO_TI)
+        
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_2, "Y")
+
+        QS_030_Create_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
+        
+        time.sleep(E_WAIT)
+        
+        '''
+        INITIAL CHECK NO ALARM PRESENT ON PATH AFTER LO CROSS-CONNECTIONS ARE CREATED 
+        '''
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_2)
+        
+        QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2,"TULOP")
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_2)
+        
+        QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2,"TUAIS")
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_2)
+ 
+
+        QS_060_Delete_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
+
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_2, "N")
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p5, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p6, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, E_BLOCK_SIZE*2+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p4, E_BLOCK_SIZE*3+1, E_BLOCK_SIZE, zq_xc_list)
+        
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, E_BLOCK_SIZE*4+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE*5+1, E_BLOCK_SIZE, zq_xc_list)
+
  
         '''
         Delete equipped 4 x 1P10GSO
