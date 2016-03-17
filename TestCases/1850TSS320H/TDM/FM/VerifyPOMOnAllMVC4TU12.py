@@ -7,7 +7,7 @@ TestCase template for K@TE test developers
 :field Description: are verified. 
 :field Description: S1 and S2 port on NE must be STM64
 :field Topology: 5 
-:field Dependency: 
+:field Dependency: NA
 :field Lab: SVT
 :field TPS: FM__8-1-4-1
 :field RunSections: 11111 

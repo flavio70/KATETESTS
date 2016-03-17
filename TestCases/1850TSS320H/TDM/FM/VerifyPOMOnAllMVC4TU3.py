@@ -6,8 +6,8 @@ TestCase template for K@TE test developers
 :field Description: no alarms/errors are generating on SDH. The check i performed
 :field Description: for all the 384x3=1152 TU3s
 :field Topology: 5
-:field Dependency:
-:field Lab: 
+:field Dependency: NA
+:field Lab: SVT
 :field TPS: FM__8-1-3-1
 :field RunSections: 11111
 :field Author: tosima
