@@ -9,7 +9,7 @@ TestCase template for K@TE test developers
 :field Dependency: 
 :field Lab: SVT
 :field TPS: FM__5-2-8-1
-:field RunSections: 10101 
+:field RunSections: 11111 
 :field Author: tosima
 
 """
