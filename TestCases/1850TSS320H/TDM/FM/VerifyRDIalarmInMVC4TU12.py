@@ -2,15 +2,12 @@
 """
 TestCase template for K@TE test developers
 
-:field Description: Check that when enabling and disabling POM and EGPOM on MVC4TU12
-:field Description: no alarms/errors are generating on SDH. For each block of 128 VC4 
-:field Description: is taken 1 VC4 and for this all VC12s are checked. 
-:field Description: S1 and S2 port on NE must be STM64
-:field Topology: 5 
-:field Dependency: 
+:field Description: This test verifies the detection/clearance of RDI alarm on MVC4TU12 facilities
+:field Topology: 5
+:field Dependency:
 :field Lab: SVT
-:field TPS: FM__5-2-9-1
-:field RunSections: 11111 
+:field TPS: FM__5-2-14-2
+:field RunSections: 11111
 :field Author: tosima
 
 """
@@ -18,13 +15,14 @@ TestCase template for K@TE test developers
 from katelibs.testcase          import TestCase
 from katelibs.eqpt1850tss320    import Eqpt1850TSS320
 from katelibs.instrumentONT     import InstrumentONT
-#from katelibs.instrumentIXIA     import InstrumentIXIA
-#from katelibs.instrumentSPIRENT  import InstrumentSPIRENT
 from katelibs.swp1850tss320     import SWP1850TSS
-from katelibs.facility_tl1      import * 
+from katelibs.facility_tl1      import *
 import time
+import string
 import math
 
+E_RFI_NUM = 2
+E_BLOCK_SIZE = 64
 
 def dprint(zq_str,zq_level):
     '''
@@ -41,7 +39,6 @@ def dprint(zq_str,zq_level):
     if (E_DPRINT & zq_level):
         print(zq_str)
     return
-
 
 def QS_010_Create_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq_xc_list):
     '''
@@ -158,7 +155,6 @@ def QS_050_Modify_MVC4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_
     return
 
 
-
 def QS_060_Delete_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
     zq_tu12_list=zq_xc_list[zq_vc4_1].split(',')
@@ -187,74 +183,100 @@ def QS_060_Delete_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
     return
 
 
-def QS_070_Enable_Disable_POM(zq_run, zq_tu12,zq_enadis):
 
-    zq_tl1_res=NE1.tl1.do("ED-TU12::{}::::POM={},EGPOM={};".format(zq_tu12,zq_enadis,zq_enadis))
-    zq_msg=TL1message(NE1.tl1.get_last_outcome())
-    dprint(NE1.tl1.get_last_outcome(),1)
-    zq_cmd=zq_msg.get_cmd_status()
+def QS_070_Enable_Disable_POM(zq_run, zq_mtx_slot, zq_vc4, zq_enadis):
 
-    if zq_cmd == (True,'COMPLD'):
-        dprint("\nOK\tPom and EGPOM setting to [{}] for {} successful".format(zq_enadis,zq_tu12),2)
-        zq_run.add_success(NE1, "Pom and EGPOM setting to [{}] for {} successful".format(zq_enadis,zq_tu12),"0.0", "Pom and EGPOM setting")
-
-    else:
-        dprint("\nKO\tPom and EGPOM setting to [{}] for {} failed".format(zq_enadis,zq_tu12),2)
-        zq_run.add_failure(NE1, "TL1 COMMAND","0.0","Pom and EGPOM setting to [{}] for {} failed".format(zq_enadis,zq_tu12),"TL1 command fail")
-    
+    zq_tu12_idx="MVC4TU12-{}-{}".format(zq_mtx_slot,str(zq_vc4))
+    for zq_j in range (1,4):
+        for zq_m in range (1,8):
+            for zq_l in range (1,4):
+                zq_tl1_res=NE1.tl1.do("ED-TU12::{}-{}-{}-{}::::POM={},EGPOM={};".format(zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l), zq_enadis, zq_enadis))
+                zq_msg=TL1message(NE1.tl1.get_last_outcome())
+                dprint(NE1.tl1.get_last_outcome(),1)
+                zq_cmd=zq_msg.get_cmd_status()
+            
+                if zq_cmd == (True,'COMPLD'):
+                    dprint("\nOK\tPom and EGPOM setting to [{}] for {}-{}-{}-{} successful".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),2)
+                    zq_run.add_success(NE1, "Pom and EGPOM setting to [{}] for {}-{}-{} successful".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),"0.0", "Pom and EGPOM setting")
+            
+                else:
+                    dprint("\nKO\tPom and EGPOM setting to [{}] for {}-{}-{}-{} failed".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),2)
+                    zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Pom and EGPOM setting to [{}] for {}-{}-{}-{} failed".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),"TL1 command fail")
+                
     return
 
 
-def QS_100_Check_POM_Block(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4_2):
-    
-    for zq_j in range (1,4):
-        zq_tu12_idx1="MVC4TU12-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_1),str(zq_j))
-        zq_tu12_idx2="MVC4TU12-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_2),str(zq_j))
+def QS_90_Check_Lovc12_RFI(zq_run,zq_tu12,zq_man_exp,zq_type_exp,zq_dir_exp):
 
-        for zq_m in range (1,8):
-            for zq_l in range (1,4):
-                zq_tu12_ch1="{}.{}.{}.{}".format(str(zq_vc4_1),str(zq_j),str(zq_m),str(zq_l))
-                zq_tu12_ch2="{}.{}.{}.{}".format(str(zq_vc4_2),str(zq_j),str(zq_m),str(zq_l))
+    zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC12::{}:::RFI;".format(zq_tu12))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    dprint(NE1.tl1.get_last_outcome(),1)
+    if (zq_msg.get_cmd_response_size() == 0):
+        dprint("KO\tRFI Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_tu12, E_RFI_NUM),2)
+        zq_run.add_failure(NE1,"RFI Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_tu12, E_RFI_NUM),"0.0", "RFI Condition verification failure: Exp [{}] - Rcv [0]".format(E_RFI_NUM),"RFI CONDITION CHECK")
+    else:
+        zq_cmd=zq_msg.get_cmd_status()
+        if zq_cmd == (True,'COMPLD'):
+            zq_man = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_tu12), 2)
+            zq_type = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_tu12), 6)
+            zq_dir = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_tu12), 7)
+            if (zq_man == zq_man_exp) and (zq_type == zq_type_exp) and (zq_dir == zq_dir_exp):
+                dprint("OK\tRFI Condition verification successful for {} facility.".format(zq_tu12),2)
+                zq_run.add_success(NE1, "RFI Condition verification successful for {} facility.".format(zq_tu12),"0.0", "RFI CONDITION CHECK")
+            else:
+                dprint("KO\tRFI Condition verification failure for {} facility.".format(zq_tu12),2)
+                dprint("\t\tCOND: Exp [{}]  - Rcv [{}]".format(zq_man_exp,zq_man),2)
+                dprint("\t\tTYPE: Exp [{}] - Rcv [{}]".format(zq_type_exp,zq_type),2)
+                dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir),2)
+                zq_run.add_failure(NE1,"RFI Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_tu12,zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir),"0.0", "RFI Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir),"RFI CONDITION CHECK")
+        
+    return
+
+
+def QS_100_Check_RDI(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4_2):
+
+   
+    for zq_j in range (1,2):
+        for zq_m in range (1,2):
+            for zq_l in range (1,2):
+                zq_tu12_ch1="{}.{}.{}.{}".format(str(zq_vc4_1 % E_BLOCK_SIZE),str(zq_j),str(zq_m),str(zq_l))
+                zq_tu12_ch2="{}.{}.{}.{}".format(str(zq_vc4_2 % E_BLOCK_SIZE),str(zq_j),str(zq_m),str(zq_l))
+
+                zq_tu12_idx1="MVC4TU12-{}-{}-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_1),str(zq_j),str(zq_m),str(zq_l))
+                zq_tu12_idx2="MVC4TU12-{}-{}-{}-{}-{}".format(zq_mtx_slot,str(zq_vc4_2),str(zq_j),str(zq_m),str(zq_l))
+
                 ONT.get_set_rx_lo_measure_channel(zq_ONT_p1, zq_tu12_ch1)
                 ONT.get_set_rx_lo_measure_channel(zq_ONT_p2, zq_tu12_ch2)
-                
+            
                 ONT.get_set_tx_lo_measure_channel(zq_ONT_p1, zq_tu12_ch1)
                 ONT.get_set_tx_lo_measure_channel(zq_ONT_p2, zq_tu12_ch2)
                 
-                ONT.start_measurement("P1")
-                ONT.start_measurement("P2")
-
-               
-                QS_070_Enable_Disable_POM(zq_run, "{}-{}-{}".format(zq_tu12_idx1,str(zq_m),str(zq_l)),"Y")
-                QS_070_Enable_Disable_POM(zq_run, "{}-{}-{}".format(zq_tu12_idx2,str(zq_m),str(zq_l)),"Y")
+                ONT.get_set_alarm_insertion_mode(zq_ONT_p1, "LO", "CONT")
+                ONT.get_set_alarm_insertion_mode(zq_ONT_p2, "LO", "CONT")
         
-                time.sleep(1)
+                ONT.get_set_alarm_insertion_type(zq_ONT_p1, "LPRDI")
+                ONT.get_set_alarm_insertion_type(zq_ONT_p2, "LPRDI")
         
-                QS_070_Enable_Disable_POM(zq_run, "{}-{}-{}".format(zq_tu12_idx1,str(zq_m),str(zq_l)),"N")
-                QS_070_Enable_Disable_POM(zq_run, "{}-{}-{}".format(zq_tu12_idx2,str(zq_m),str(zq_l)),"N")
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p1,"LO","ON")
         
-                ONT.halt_measurement("P1")
-                ONT.halt_measurement("P2")
+                time.sleep(10)
         
-                zq_alm_p1=ONT.retrieve_ho_lo_alarms("P1")
-                zq_alm_p2=ONT.retrieve_ho_lo_alarms("P2")
-                if zq_alm_p1[0] == True:
-                    if len(zq_alm_p1[1]) == 0:
-                        dprint("OK\tAlarm not found when enabling/disabling POM",2)
-                        zq_run.add_success(NE1, "Alarm not found when enabling/disabling POM","0.0", "Alarms check")
-                    else:
-                        dprint("KO\tAlarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p1, zq_alm_p1[1]),2)
-                        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Alarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p1, zq_alm_p1[1]),"Alarms check")
+                QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx1,"RFI","FEND","RCV")
+                QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx2,"RFI","FEND","TRMT")
+                
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p1,"LO","OFF")
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p2,"LO","ON")
+        
+                time.sleep(10)
+        
+                QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx1,"RFI","FEND","TRMT")
+                QS_90_Check_Lovc12_RFI(zq_run,zq_tu12_idx2,"RFI","FEND","RCV")
+            
+                ONT.get_set_alarm_insertion_activation(zq_ONT_p2,"LO","OFF")
     
-                if zq_alm_p2[0] == True:
-                    if len(zq_alm_p2[1]) == 0:
-                        dprint("OK\tAlarm not found when enabling/disabling POM",2)
-                        zq_run.add_success(NE1, "Alarm not found when enabling/disabling POM","0.0", "Alarms check")
-                    else:
-                        dprint("KO\tAlarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p2, zq_alm_p2[1]),2)
-                        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Alarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p2, zq_alm_p2[1]),"Alarms check")
-
+    
     return
+
 
 
 class Test(TestCase):
@@ -291,10 +313,8 @@ class Test(TestCase):
         test Setup Section implementation
         insert general SetUp code for your test below
         '''
-        self.start_tps_block(NE1.id,"FM", "5-2-9-1")
-
-        ONT.init_instrument("P1")
-        ONT.init_instrument("P2")
+        ONT.init_instrument(ONT_P1)
+        ONT.init_instrument(ONT_P2)
 
 
     def test_body(self):
@@ -304,14 +324,19 @@ class Test(TestCase):
         '''
         print("\n******************** START ********************")
         '''
-        Retrieve parameters from preset
+        VERIFY DETECTION OF RFI CONDITION ALARM IN MVC4TU12 FACILITIES
         '''
+        print("\n*******************************************************************")
+        print("\n   VERIFY DETECTION OF RFI CONDITION ALARM IN MVC4TU12 FACILITIES  ")
+        print("\n*******************************************************************")
+        
+        self.start_tps_block(NE1.id,"FM", "5-2-14-2")
+
         E_LO_MTX = "MXH60GLO"
         
         E_SLOT = ['2','3','4','5','6','7','8','12','13','14','15','16','17','18','19']
-        E_BLOCK_SIZE = 64
         E_HO_TI = 'X4F4E5420484F2D5452414345202020' #'ONT HO-TRACE   '
-        
+
         E_VC4_1_1 = 34      # <64
         E_VC4_1_2 = 92      # 65<x<129
         E_VC4_2_1 = 189     # 128<x<193
@@ -319,15 +344,13 @@ class Test(TestCase):
         E_VC4_3_1 = 289     # 256<x<321
         E_VC4_3_2 = 356     # 320<x<385
         
-        
-        zq_mtxlo_slot=NE1.get_preset("M1")
-        NE1_stm64p1=NE1.get_preset("S1")
-        NE1_stm64p2=NE1.get_preset("S2")
-        #ONT_P1="P1"
-        #ONT_P2="P2"
+        zq_mtxlo_slot=NE1_M1
+        NE1_stm64p1=NE1_S1
+        NE1_stm64p2=NE1_S2
         zq_board_to_remove=list()
         zq_xc_list=list()
         zq_xc_list.append("EMPTY,EMPTY")
+
 
         '''
         Board equipment if not yet!
@@ -345,12 +368,28 @@ class Test(TestCase):
             NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
 
         '''
-        Change 384xMVC4 structure to 63xTU12
+        Change MVC4 structure to 63xTU12 for preset VC4
         '''
         zq_filter=TL1check()
         zq_filter.add_field('LOSTRUCT', '63xTU12')
-        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-1&&-384::::CMDMDE=FRCD,LOSTRUCT=63xTU12;".format(zq_mtxlo_slot))
-        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-384::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot),zq_filter)
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=63xTU12;".format(zq_mtxlo_slot,E_VC4_1_1))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_1_1),zq_filter)
+
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=63xTU12;".format(zq_mtxlo_slot,E_VC4_1_2))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_1_2),zq_filter)
+
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=63xTU12;".format(zq_mtxlo_slot,E_VC4_2_1))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_2_1),zq_filter)
+        
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=63xTU12;".format(zq_mtxlo_slot,E_VC4_2_2))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_2_2),zq_filter)
+        
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=63xTU12;".format(zq_mtxlo_slot,E_VC4_3_1))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_3_1),zq_filter)
+        
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=63xTU12;".format(zq_mtxlo_slot,E_VC4_3_2))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_3_2),zq_filter)
+
 
         '''
         Find 4 free slots and equip 4 x 1P10GSOE
@@ -383,9 +422,13 @@ class Test(TestCase):
         NE1_stm64p4 = (''.join(zq_board_to_remove[1]).replace('10GSO-',''))+'-1'
         NE1_stm64p5 = (''.join(zq_board_to_remove[2]).replace('10GSO-',''))+'-1'
         NE1_stm64p6 = (''.join(zq_board_to_remove[3]).replace('10GSO-',''))+'-1'
+
         
+        print("\n******************************************************************************")
+        print("\n   CHECK RFI CONDITION ALARM FOR TWO MVC4TU12 FACILITIES IN 1st 128 BLOCK     ")
+        print("\n******************************************************************************")
         '''
-        CHECK FIRST 128 BLOCK of MVC4/TU3 
+        CHECK RFI CONDITION ALARM FOR TWO MVC4TU12 FACILITIES IN FIRST 128 BLOCK 
         '''
         QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
         QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
@@ -396,40 +439,47 @@ class Test(TestCase):
         QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_1_1, 1, E_HO_TI)
         QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_1_2, 1, E_HO_TI)
         
-        
         QS_030_Create_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
         
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_2, "Y")
+
         '''
-        Configure both ONT ports to VC3 mapping
+        Configure both ONT ports to VC12 mapping
         '''
-        ONT.get_set_tx_bit_rate("P1", "STM64")
-        ONT.get_set_tx_bit_rate("P2", "STM64")
+        ONT.get_set_tx_bit_rate(ONT_P1, "STM64")
+        ONT.get_set_tx_bit_rate(ONT_P2, "STM64")
         
-        ONT.get_set_rx_channel_mapping_size("P1", "VC12")
-        ONT.get_set_rx_channel_mapping_size("P2", "VC12")
+        ONT.get_set_rx_channel_mapping_size(ONT_P1, "VC12")
+        ONT.get_set_rx_channel_mapping_size(ONT_P2, "VC12")
         
-        ONT.get_set_tx_channel_mapping_size("P1", "VC12")
-        ONT.get_set_tx_channel_mapping_size("P2", "VC12")
+        ONT.get_set_tx_channel_mapping_size(ONT_P1, "VC12")
+        ONT.get_set_tx_channel_mapping_size(ONT_P2, "VC12")
 
-        ONT.get_set_laser_status("P1", "ON")
-        ONT.get_set_laser_status("P2", "ON")
+        ONT.get_set_laser_status(ONT_P1, "ON")
+        ONT.get_set_laser_status(ONT_P2, "ON")
 
-        ONT.get_set_clock_reference_source("P1", "RX")
-        ONT.get_set_clock_reference_source("P2", "RX")
-
-                
-        QS_100_Check_POM_Block(self, "P1", "P2", zq_mtxlo_slot, (E_VC4_1_1 % E_BLOCK_SIZE), (E_VC4_1_2 % E_BLOCK_SIZE))
-
+        ONT.get_set_clock_reference_source(ONT_P1, "RX")
+        ONT.get_set_clock_reference_source(ONT_P2, "RX")
         
+        ONT.get_set_background_channels_fill_mode(ONT_P1, "FIX")
+        ONT.get_set_background_channels_fill_mode(ONT_P2, "FIX")
+
+        QS_100_Check_RDI(self, "P1", "P2", zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2)
+
         QS_060_Delete_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
 
-
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_2, "N")
 
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
 
+        print("\n******************************************************************************")
+        print("\n   CHECK RFI CONDITION ALARM FOR TWO MVC4TU12 FACILITIES IN 2nd 128 BLOCK     ")
+        print("\n******************************************************************************")
         '''
-        CHECK SECOND 128 BLOCK of MVC4/TU3 
+        CHECK RFI CONDITION ALARM FOR TWO MVC4TU12 FACILITIES IN SECOND 128 BLOCK 
         '''
         zq_xc_list=list()
         zq_xc_list.append("EMPTY,EMPTY")
@@ -442,22 +492,30 @@ class Test(TestCase):
 
         QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_1, 1, E_HO_TI)
         QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_2, 1, E_HO_TI)
-        
+
         QS_030_Create_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
         
-        QS_100_Check_POM_Block(self, "P1", "P2", zq_mtxlo_slot, (E_VC4_2_1 % E_BLOCK_SIZE), (E_VC4_2_2 % E_BLOCK_SIZE))
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_2, "Y")
+
+        QS_100_Check_RDI(self, "P1", "P2", zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2)
         
         QS_060_Delete_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
-        
+
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_2, "N")
+
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p4, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
 
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, E_BLOCK_SIZE*2+1, E_BLOCK_SIZE, zq_xc_list)
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE*3+1, E_BLOCK_SIZE, zq_xc_list)
         
-
+        print("\n******************************************************************************")
+        print("\n   CHECK RFI CONDITION ALARM FOR TWO MVC4TU12 FACILITIES IN 3rd 128 BLOCK     ")
+        print("\n******************************************************************************")
         '''
-        CHECK THIRD 128 BLOCK of MVC4/TU3 
+        CHECK RFI CONDITION ALARM FOR TWO MVC4TU12 FACILITIES IN THIRD 128 BLOCK 
         '''
         zq_xc_list=list()
         zq_xc_list.append("EMPTY,EMPTY")
@@ -474,11 +532,17 @@ class Test(TestCase):
         QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_1, 1, E_HO_TI)
         QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_2, 1, E_HO_TI)
         
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_2, "Y")
+
         QS_030_Create_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
         
-        QS_100_Check_POM_Block(self, "P1", "P2", zq_mtxlo_slot, (E_VC4_3_1 % E_BLOCK_SIZE), (E_VC4_3_2 % E_BLOCK_SIZE))
+        QS_100_Check_RDI(self, "P1", "P2", zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2)
 
         QS_060_Delete_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
+
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_2, "N")
 
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p5, 1, E_BLOCK_SIZE, zq_xc_list)
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p6, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
@@ -507,27 +571,39 @@ class Test(TestCase):
             NE1.tl1.do_until("RTRV-EQPT::{};".format(''.join(zq_board_to_remove[zq_i]).replace('10GSO','MDL')),zq_filter)
             print('Board Deleted: {}'.format(''.join(zq_board_to_remove[zq_i]).replace('10GSO','MDL')))
 
-        
         '''
-        Restore 384xMVC4 structure to 3xTU3
+        Restore MVC4 structure to 3xTU3 for preset VC4
         '''
         zq_filter=TL1check()
-        zq_filter.add_field("LOSTRUCT", "3xTU3")
-        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-1&&-384::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot))
-        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-384::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot),zq_filter)
+        zq_filter.add_field('LOSTRUCT', '3xTU3')
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot,E_VC4_1_1))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_1_1),zq_filter)
 
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot,E_VC4_1_2))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_1_2),zq_filter)
 
-        self.stop_tps_block(NE1.id,"FM", "5-2-9-1")
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot,E_VC4_2_1))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_2_1),zq_filter)
+        
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot,E_VC4_2_2))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_2_2),zq_filter)
+        
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot,E_VC4_3_1))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_3_1),zq_filter)
+        
+        zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot,E_VC4_3_2))
+        NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_3_2),zq_filter)
 
+        self.stop_tps_block(NE1.id,"FM", "5-2-14-2")
 
-
+       
     def test_cleanup(self):
         '''
         test Cleanup Section implementation
         insert CleanUp code for your test below
         '''
-        ONT.deinit_instrument("P1")
-        ONT.deinit_instrument("P2")
+        ONT.deinit_instrument(ONT_P1)
+        ONT.deinit_instrument(ONT_P2)
 
 
     def dut_cleanup(self):
@@ -540,19 +616,22 @@ class Test(TestCase):
         NE1.clean_up()
 
 
-
+#Please don't change the code below#
 if __name__ == "__main__":
     #initializing the Test object instance, do not remove
     CTEST = Test(__file__)
 
     #initializing all local variable and constants used by Test object
     NE1 = Eqpt1850TSS320('NE1', CTEST.kenvironment)
-    ONT = InstrumentONT('ONT1', CTEST.kenvironment)
+    NE1_M1=NE1.get_preset("M1")
+    NE1_S1=NE1.get_preset("S1")
+    NE1_S2=NE1.get_preset("S2")
+    ONT=InstrumentONT('ONT1', CTEST.kenvironment)
+    ONT_P1="P1"
+    ONT_P2="P2"
     CTEST.add_eqpt(NE1)
 
     # Run Test main flow
     # Please don't touch this code
     CTEST.run()
-
-    ONT.clean_up()
     
