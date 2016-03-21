@@ -85,16 +85,16 @@ class Test(TestCase):
         '''
         print("\n******************** START ********************")
         E_MAX_VC4=65
-        E_LOA_MVC4=56
+        E_LOA_MVC4=64
         E_LOA_MVC4TU3=E_LOA_MVC4*3
         E_LOA_MVC4TU12=E_LOA_MVC4TU3*21
 
         E_START_VC4=1
-        E_VCGVC4_MAXMBR = 20
+        E_VCGVC4_MAXMBR = 4
         E_START_VC3 = E_START_VC4 + E_VCGVC4_MAXMBR + 5
-        E_VCGVC3_MAXMBR = 10
+        E_VCGVC3_MAXMBR = 3
         E_START_VC12 = E_START_VC3 + E_VCGVC3_MAXMBR + 5
-        E_VCGVC12_MAXMBR = 63
+        E_VCGVC12_MAXMBR = 2
 
         E_HO_CONN = E_VCGVC4_MAXMBR +1  #connections are 1 less !
         

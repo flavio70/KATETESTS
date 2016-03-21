@@ -69,9 +69,6 @@ class Test(TestCase):
         '''
         NE1.tl1.do("ACT-USER::admin:::Alcatel1;")
         time.sleep(10)
-        NE1.tl1.event_collection_start()
-        time.sleep(10)
-
 
     def test_setup(self):
         '''
@@ -99,13 +96,18 @@ class Test(TestCase):
         zq_stm64_1=NE1.get_preset("S1")
         zq_mtxlo_slot=NE1.get_preset("M1")
 
+        zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+        zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+
+        NE1.tl1.event_collection_start()
+        time.sleep(10)
+
         zq_filter=TL1check()
         zq_filter.add_pst("IS")
         
         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-        
         NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
-       
+        
         zq_idx = 1
         zq_dbchg_num = 0
         zq_dbchg_tu3 = 0
