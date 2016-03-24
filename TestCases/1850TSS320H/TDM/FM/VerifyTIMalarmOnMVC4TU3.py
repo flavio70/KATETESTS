@@ -24,7 +24,7 @@ import math
 
 E_RFI_NUM = 1
 E_BLOCK_SIZE = 64        
-E_WAIT = 5
+E_WAIT = 10
 
 
 E_HO_TI  = 'X4F4E5420484F2D5452414345202020' #'ONT HO-TRACE   '
@@ -453,17 +453,18 @@ class Test(TestCase):
         '''
         Board equipment if not yet!
         '''
-        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot), policy='DENY')
+        zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
-        dprint(NE1.tl1.get_last_outcome(),1)
         zq_cmd=zq_msg.get_cmd_status()
-        if zq_cmd == (True,'DENY'):
-            print("Board already equipped")
-        else:
-            zq_filter=TL1check()
-            zq_filter.add_pst("IS")
-            zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-            NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+        if zq_cmd == (True,'COMPLD'):
+            zq_attr_list=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            if zq_attr_list['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                print("Board already equipped")
+            else:
+                zq_filter=TL1check()
+                zq_filter.add_pst("IS")
+                zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
 
         '''
         Find 4 free slots and equip 4 x 1P10GSOE

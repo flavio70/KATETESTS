@@ -96,8 +96,15 @@ class Test(TestCase):
         zq_stm64_1=NE1.get_preset("S1")
         zq_mtxlo_slot=NE1.get_preset("M1")
 
-        zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-        zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+        zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+        zq_msg=TL1message(NE1.tl1.get_last_outcome())
+        zq_cmd=zq_msg.get_cmd_status()
+        if zq_cmd == (True,'COMPLD'):
+            zq_attr_list=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            if zq_attr_list['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list['ACTUALTYPE']==E_LO_MTX:  #Board equipped then delete it!
+                print("Board equipped then delete!")
+                zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
 
         NE1.tl1.event_collection_start()
         time.sleep(10)

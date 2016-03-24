@@ -26,7 +26,7 @@ import math
 
 E_RFI_NUM = 1
 E_BLOCK_SIZE = 64        
-E_WAIT = 5
+E_WAIT = 10
 
 def dprint(zq_str,zq_level):
     '''
@@ -384,17 +384,18 @@ class Test(TestCase):
         '''
         Board equipment if not yet!
         '''
-        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot), policy='DENY')
+        zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
-        dprint(NE1.tl1.get_last_outcome(),1)
         zq_cmd=zq_msg.get_cmd_status()
-        if zq_cmd == (True,'DENY'):
-            print("Board already equipped")
-        else:
-            zq_filter=TL1check()
-            zq_filter.add_pst("IS")
-            zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-            NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+        if zq_cmd == (True,'COMPLD'):
+            zq_attr_list=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            if zq_attr_list['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                print("Board already equipped")
+            else:
+                zq_filter=TL1check()
+                zq_filter.add_pst("IS")
+                zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
 
         '''
         Find 4 free slots and equip 4 x 1P10GSOE
@@ -470,6 +471,7 @@ class Test(TestCase):
         ONT.get_set_background_channels_fill_mode(ONT_P2, "FIX")
     
         time.sleep(E_WAIT)
+        time.sleep(E_WAIT)
         
         '''
         INITIAL CHECK NO ALARM PRESENT ON PATH AFTER HO CROSS-CONNECTIONS ARE CREATED 
@@ -517,6 +519,7 @@ class Test(TestCase):
 
         QS_030_Create_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
  
+        time.sleep(E_WAIT)
         time.sleep(E_WAIT)
         
         '''
@@ -572,6 +575,7 @@ class Test(TestCase):
 
         QS_030_Create_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
         
+        time.sleep(E_WAIT)
         time.sleep(E_WAIT)
         
         '''
