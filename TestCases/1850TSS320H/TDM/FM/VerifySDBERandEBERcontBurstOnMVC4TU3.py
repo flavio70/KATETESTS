@@ -28,11 +28,32 @@ E_BLOCK_SIZE = 64
 E_TU3_RANGE = 2
 E_WAIT = 10
 
-E_BER_2 = 2
-E_BER_11 = 11
-E_BER_101 = 101
-E_BER_1001 = 1001
 E_NO_BER = 8000
+
+#Timeout for do_until TL1 command
+E_TIMEOUT = 1800
+
+#
+#DICTIONARIES MAPs for activate BER / EBER measurement according to bank and thresholds
+#i.e. 1BER8 = 1st bank - 1E-8
+#i.e. 2BER100 = 2nd bank - 100 error frames
+#
+# CHANGE THIS MAP TO ACTIVATE REQUIRED MEASUREMENT
+bercont={'1BER5':'0','2BER5':'0','3BER5':'1',
+         '1BER6':'0','2BER6':'1','3BER6':'0',
+         '1BER7':'1','2BER7':'0','3BER7':'0',
+         '1BER8':'0','2BER8':'0','3BER8':'0',
+         '1BER9':'0','2BER9':'0','3BER9':'0'}
+
+berburst={'1BER1':'1','2BER1':'0','3BER1':'0',
+          '1BER10':'0','2BER10':'1','3BER10':'0',
+          '1BER100':'0','2BER100':'0','3BER100':'1',
+          '1BER1000':'0','2BER1000':'0','3BER1000':'0'}
+
+eber={'1EBER3':'1','2EBER3':'0','3EBER3':'0',
+      '1EBER4':'0','2EBER4':'1','3EBER4':'0',
+      '1EBER5':'0','2EBER5':'0','3EBER5':'1'}
+
 
 def dprint(zq_str,zq_level):
     '''
@@ -225,15 +246,17 @@ def QS_080_Set_BER_mode(zq_run, zq_ont_port, zq_order, zq_mode, zq_rate, zq_erro
 
     ONT.get_set_error_insertion_mode(zq_ont_port, zq_order, zq_mode)
     ONT.get_set_error_rate(zq_ont_port, zq_order, zq_rate)
-    ONT.get_set_num_errored_burst_frames(zq_ont_port, zq_order, zq_frame_err)
-    ONT.get_set_num_not_errored_burst_frames(zq_ont_port, zq_order, zq_frame_noerr)
+    if zq_mode != 'RATE':
+        ONT.get_set_num_errored_burst_frames(zq_ont_port, zq_order, zq_frame_err)
+        ONT.get_set_num_not_errored_burst_frames(zq_ont_port, zq_order, zq_frame_noerr)
     ONT.get_set_error_insertion_type(zq_ont_port, zq_error)
     print("***********************************************")
     print("*\tBER / EBER parameters:")
     print("*\t\tmode: {}".format(zq_mode))
     print("*\t\trate: {}".format(zq_rate))
-    print("*\t\terror frames: {}".format(zq_frame_err))
-    print("*\t\tno error frames: {}".format(zq_frame_noerr))
+    if zq_mode != 'RATE':
+        print("*\t\terror frames: {}".format(zq_frame_err))
+        print("*\t\tno error frames: {}".format(zq_frame_noerr))
     print("***********************************************")
     return
 
@@ -243,7 +266,7 @@ def QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_1, zq_j, zq_pst):
 
     zq_filter=TL1check()
     zq_filter.add_pst(zq_pst)
-    zq_tl1_res=NE1.tl1.do_until("RTRV-TU3::MVC4TU3-{}-{}-{};".format(zq_slot, zq_vc4_1, zq_j), zq_filter)
+    zq_tl1_res=NE1.tl1.do_until("RTRV-TU3::MVC4TU3-{}-{}-{};".format(zq_slot, zq_vc4_1, zq_j), zq_filter,timeout=E_TIMEOUT)
     if zq_tl1_res:
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         dprint(NE1.tl1.get_last_outcome(),1)
@@ -316,8 +339,20 @@ def QS_100_Check_SDBER(zq_run,
         zq_tu3_idx2="MVC4TU3-{}-{}-{}".format(zq_slot,str(zq_vc4_2),str(zq_j))
 
         if zq_mode == 'RATE':
-            zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,SDTH={},EGSDSFMODE=POISSON,EGSDTH={};".format(zq_tu3_idx1, zq_rate.replace("1E-",""), zq_rate.replace("1E-","")))
-            zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,SDTH={},EGSDSFMODE=POISSON,EGSDTH={};".format(zq_tu3_idx2, zq_rate.replace("1E-",""), zq_rate.replace("1E-","")))
+            if zq_rate == '1E-5' or \
+               zq_rate == '1E-6' or \
+               zq_rate == '1E-7' or \
+               zq_rate == '1E-8' or \
+               zq_rate == '1E-9':
+                zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,SDTH={},SFTH=3,EGSDSFMODE=POISSON,EGSDTH={},EGSFTH=3;".
+                                      format(zq_tu3_idx1, zq_rate.replace("1E-",""), zq_rate.replace("1E-","")))
+                zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,SDTH={},SFTH=3,EGSDSFMODE=POISSON,EGSDTH={},EGSFTH=3;".
+                                      format(zq_tu3_idx2, zq_rate.replace("1E-",""), zq_rate.replace("1E-","")))
+            else:
+                zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,SFTH={},SDTH=6,EGSDSFMODE=POISSON,EGSFTH={},EGSDTH=6;".
+                                      format(zq_tu3_idx1, zq_rate.replace("1E-",""), zq_rate.replace("1E-","")))
+                zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,SFTH={},SDTH=6,EGSDSFMODE=POISSON,EGSFTH={},EGSDTH=6;".
+                                      format(zq_tu3_idx2, zq_rate.replace("1E-",""), zq_rate.replace("1E-","")))
         else:
             zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=BURST,BRSTTH={},SDTH={},EGSDSFMODE=BURST,EGBRSTTH={},EGSDTH={};".
                                   format(zq_tu3_idx1, str(zq_num_err-1), zq_rate.replace("1E-",""), str(zq_num_err-1), zq_rate.replace("1E-","")))
@@ -348,6 +383,12 @@ def QS_100_Check_SDBER(zq_run,
         QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_2, zq_j, "IS-NR")
         QS_005_Check_Cond_Absence(zq_run, "LOVC3", zq_tu3_idx2)
 
+        #RESTORE DEFAULT SFSMODE/EGSFSMODE SDTH/EGSDTH SFTH/EGSFTH BRSTTH/EGBRSTTH
+        zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,BRSTTH=1000,SDTH=6,SFTH=3,EGSDSFMODE=POISSON,EGBRSTTH=1000,EGSDTH=6,EGSFTH=3;".
+                              format(zq_tu3_idx1))
+        zq_tl1_res=NE1.tl1.do("ED-TU3::{}::::SDSFMODE=POISSON,BRSTTH=1000,SDTH=6,SFTH=3,EGSDSFMODE=POISSON,EGBRSTTH=1000,EGSDTH=6,EGSFTH=3;".
+                              format(zq_tu3_idx2))
+    
     return
 
 
@@ -545,44 +586,27 @@ class Test(TestCase):
         QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
         
         #
-        # TEST BER CONT for 1E-6 to 1E-9 
+        # TEST BER CONT for 1E-5 to 1E-9 
         #
-        
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-6", 1, 1, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-7", 1, 1, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-8", 1, 1, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-        
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-9", 1, 1, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-
+        for zq_i in range(5,10):
+            if bercont.get('1BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-{}".format(str(zq_i)), 1, 1, "LPBIP","IS-ANR","SDBER","NEND","RCV")
 
         #
         # TEST BER BURST for error frames 2/11/101/1001 and no error frames 8000 
         #
+        for zq_i in [1,10,100,1000]:
+            if berburst.get('1BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
         
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "BURST_CONT","1E-6", E_BER_2, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "BURST_CONT","1E-6", E_BER_11, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "BURST_CONT","1E-6", E_BER_101, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-        
-        QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "BURST_CONT","1E-6", E_BER_1001, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
-
-
         #
-        # TEST EBER CONT for 1E-2 to 1E-5 
+        # TEST EBER CONT for 1E-3 to 1E-5 
         #
 
-        #QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-2", "1", "1", "LPBIP","OOS-AU","EBER","NEND","RCV")
+        for zq_i in range(3,6):
+            if bercont.get('1EBER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-{}".format(str(zq_i)), "1", "1", "LPBIP","OOS-AU","EBER","NEND","RCV")
         
-        #QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-3", "1", "1", "LPBIP","OOS-AU","EBER","NEND","RCV")
-
-        #QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-4", "1", "1", "LPBIP","OOS-AU","EBER","NEND","RCV")
-        
-        #QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "RATE","1E-5", "1", "1", "LPBIP","OOS-AU","EBER","NEND","RCV")
-
-
         QS_060_Delete_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
         
         QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_1_1, "N")
@@ -595,22 +619,130 @@ class Test(TestCase):
         print("\n   CHECK BER/EBER CONT/BURST CONDITION ALARM FOR SIX MVC4TU3 FACILITIES IN 2nd 128 BLOCK   ")
         print("\n*******************************************************************************************")
 
+        zq_xc_list=list()
+        zq_xc_list.append("EMPTY,EMPTY")
 
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p4, 1, E_BLOCK_SIZE, zq_xc_list)
 
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
 
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_1, 1, E_HO_TI)
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_2, 1, E_HO_TI)
 
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_2, "Y")
 
+        QS_030_Create_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
+ 
+        time.sleep(E_WAIT)
+        time.sleep(E_WAIT)
+        
+        '''
+        INITIAL CHECK NO ALARM PRESENT ON PATH AFTER HO CROSS-CONNECTIONS ARE CREATED 
+        '''
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_2)
+        
+        #
+        # TEST BER CONT for 1E-5 to 1E-9 
+        #
+        for zq_i in range(5,10):
+            if bercont.get('2BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "LO", "RATE","1E-{}".format(str(zq_i)), 1, 1, "LPBIP","IS-ANR","SDBER","NEND","RCV")
+
+        #
+        # TEST BER BURST for error frames 2/11/101/1001 and no error frames 8000 
+        #
+        for zq_i in [1,10,100,1000]:
+            if berburst.get('2BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
+
+        #
+        # TEST EBER CONT for 1E-3 to 1E-5 
+        #
+        for zq_i in range(3,6):
+            if bercont.get('2EBER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "LO", "RATE","1E-{}".format(str(zq_i)), "1", "1", "LPBIP","OOS-AU","EBER","NEND","RCV")
+
+        
+        QS_060_Delete_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
+
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_2_2, "N")
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p4, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, E_BLOCK_SIZE*2+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE*3+1, E_BLOCK_SIZE, zq_xc_list)
         
         print("\n*******************************************************************************************")
         print("\n   CHECK BER/EBER CONT/BURST CONDITION ALARM FOR SIX MVC4TU3 FACILITIES IN 3rd 128 BLOCK   ")
         print("\n*******************************************************************************************")
 
+        zq_xc_list=list()
+        zq_xc_list.append("EMPTY,EMPTY")
+
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p5, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p6, 1, E_BLOCK_SIZE, zq_xc_list)
+        
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p4, 1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
+        
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_1, 1, E_HO_TI)
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_2, 1, E_HO_TI)
+        
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_1, "Y")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_2, "Y")
+
+        QS_030_Create_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
+        
+        time.sleep(E_WAIT)
+        time.sleep(E_WAIT)
+
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_1)
+        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_2)
+        
+        #
+        # TEST BER CONT for 1E-5 to 1E-9 
+        #
+        for zq_i in range(5,10):
+            if bercont.get('3BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "LO", "RATE","1E-{}".format(str(zq_i)), 1, 1, "LPBIP","IS-ANR","SDBER","NEND","RCV")
 
 
+        #
+        # TEST BER BURST for error frames 2/11/101/1001 and no error frames 8000 
+        #
+        for zq_i in [1,10,100,1000]:
+            if berburst.get('3BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
 
+        #
+        # TEST EBER CONT for 1E-3 to 1E-5 
+        #
+        for zq_i in range(3,6):
+            if bercont.get('3EBER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "LO", "RATE","1E-{}".format(str(zq_i)), "1", "1", "LPBIP","OOS-AU","EBER","NEND","RCV")
 
+        QS_060_Delete_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
 
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_1, "N")
+        QS_070_Enable_Disable_POM(self, zq_mtxlo_slot, E_VC4_3_2, "N")
 
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p5, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p6, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, E_BLOCK_SIZE*2+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p4, E_BLOCK_SIZE*3+1, E_BLOCK_SIZE, zq_xc_list)
+        
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, E_BLOCK_SIZE*4+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE*5+1, E_BLOCK_SIZE, zq_xc_list)
 
 
 
