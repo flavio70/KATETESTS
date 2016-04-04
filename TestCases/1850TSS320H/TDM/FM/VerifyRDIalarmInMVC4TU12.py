@@ -6,7 +6,7 @@ TestCase template for K@TE test developers
 :field Topology: 5
 :field Dependency:
 :field Lab: SVT
-:field TPS: FM__5-2-14-2
+:field TPS: FM__5-2-15-1
 :field RunSections: 11111
 :field Author: tosima
 
@@ -330,7 +330,7 @@ class Test(TestCase):
         print("\n   VERIFY DETECTION OF RFI CONDITION ALARM IN MVC4TU12 FACILITIES  ")
         print("\n*******************************************************************")
         
-        self.start_tps_block(NE1.id,"FM", "5-2-14-2")
+        self.start_tps_block(NE1.id,"FM", "5-2-15-1")
 
         E_LO_MTX = "MXH60GLO"
         
@@ -594,7 +594,7 @@ class Test(TestCase):
         zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-{}::::CMDMDE=FRCD,LOSTRUCT=3xTU3;".format(zq_mtxlo_slot,E_VC4_3_2))
         NE1.tl1.do_until("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,E_VC4_3_2),zq_filter)
 
-        self.stop_tps_block(NE1.id,"FM", "5-2-14-2")
+        self.stop_tps_block(NE1.id,"FM", "5-2-15-1")
 
        
     def test_cleanup(self):
