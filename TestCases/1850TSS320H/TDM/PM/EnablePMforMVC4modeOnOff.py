@@ -2,8 +2,8 @@
 """
 TestCase template for K@TE test developers
 
-:field Description: This test provides a method to enable ON/OFF PM counter for MVC4 
-:field Description: facilities. Only RCV direction is supported.
+:field Description: This test provides a method to enable the PM counter  
+:field Description: mode ON/OFF for MVC4 facilities.
 :field Topology: 7
 :field Dependency: NA
 :field Lab: SVT
