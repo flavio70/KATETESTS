@@ -28,6 +28,7 @@ E_BLOCK_SIZE = 64
 E_WAIT = 10
 
 E_NO_BER = 2000
+E_NO_BER_1000 = 1000
 
 #CHANGE THIS LISTS TO RANGE IN MORE LOVC12, ACCORDING TO SDH SPECIFICATION
 #TUG3 range from 1..3
@@ -401,17 +402,28 @@ def QS_100_Check_SDBER(zq_run,
             
                 ONT.get_set_error_activation(zq_ont_p1, zq_order, "ON")
                 QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_1, zq_j, zq_m, zq_l, zq_status)
+                QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_2, zq_j, zq_m, zq_l, "IS-NR")
+                
                 QS_095_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx1,zq_ber_type,zq_side,zq_dir)
+                QS_095_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx2,zq_ber_type,zq_side,"TRMT")
+
                 ONT.get_set_error_activation(zq_ont_p1, zq_order, "OFF")
                 QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_1, zq_j, zq_m, zq_l, "IS-NR")
+                QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_2, zq_j, zq_m, zq_l, "IS-NR")
                 QS_005_Check_Cond_Absence(zq_run, "LOVC12", zq_tu12_idx1)
+                QS_005_Check_Cond_Absence(zq_run, "LOVC12", zq_tu12_idx2)
         
                 ONT.get_set_error_activation(zq_ont_p2, zq_order, "ON")
                 QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_2, zq_j, zq_m, zq_l, zq_status)
+                QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_1, zq_j, zq_m, zq_l, "IS-NR")
                 QS_095_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx2,zq_ber_type,zq_side,zq_dir)
+                QS_095_Check_MVC4TU12_Alarm(zq_run,zq_tu12_idx1,zq_ber_type,zq_side,"TRMT")
+
                 ONT.get_set_error_activation(zq_ont_p2, zq_order, "OFF")
                 QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_2, zq_j, zq_m, zq_l, "IS-NR")
+                QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_1, zq_j, zq_m, zq_l, "IS-NR")
                 QS_005_Check_Cond_Absence(zq_run, "LOVC12", zq_tu12_idx2)
+                QS_005_Check_Cond_Absence(zq_run, "LOVC12", zq_tu12_idx1)
         
                 #RESTORE DEFAULT SFSMODE/EGSFSMODE SDTH/EGSDTH SFTH/EGSFTH BRSTTH/EGBRSTTH
                 zq_tl1_res=NE1.tl1.do("ED-TU12::{}::::SDSFMODE=POISSON,BRSTTH=1000,SDTH=6,SFTH=3,EGSDSFMODE=POISSON,EGBRSTTH=1000,EGSDTH=6,EGSFTH=3;".
@@ -649,9 +661,13 @@ class Test(TestCase):
         #
         # TEST BER BURST for error frames 2/11/101/1001 and no error frames 8000 
         #
-        for zq_i in [1,10,100,1000]:
+        for zq_i in [1,10,100]:
             if berburst.get('1BER{}'.format(str(zq_i)))=='1':
                 QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
+        
+        for zq_i in [1000]:
+            if berburst.get('1BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER_1000, "LPBIP","IS-ANR","SDBER","NEND","RCV")
         
         #
         # TEST EBER CONT for 1E-3 to 1E-5 
@@ -709,9 +725,13 @@ class Test(TestCase):
         #
         # TEST BER BURST for error frames 2/11/101/1001 and no error frames 8000 
         #
-        for zq_i in [1,10,100,1000]:
+        for zq_i in [1,10,100]:
             if berburst.get('2BER{}'.format(str(zq_i)))=='1':
                 QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
+
+        for zq_i in [1000]:
+            if berburst.get('2BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER_1000, "LPBIP","IS-ANR","SDBER","NEND","RCV")
 
         #
         # TEST EBER CONT for 1E-3 to 1E-5 
@@ -773,9 +793,13 @@ class Test(TestCase):
         #
         # TEST BER BURST for error frames 2/11/101/1001 and no error frames 8000 
         #
-        for zq_i in [1,10,100,1000]:
+        for zq_i in [1,10,100]:
             if berburst.get('3BER{}'.format(str(zq_i)))=='1':
                 QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER, "LPBIP","IS-ANR","SDBER","NEND","RCV")
+
+        for zq_i in [1000]:
+            if berburst.get('3BER{}'.format(str(zq_i)))=='1':
+                QS_100_Check_SDBER(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "LO", "BURST_CONT","1E-6", zq_i+1, E_NO_BER_1000, "LPBIP","IS-ANR","SDBER","NEND","RCV")
 
         #
         # TEST EBER CONT for 1E-3 to 1E-5 
