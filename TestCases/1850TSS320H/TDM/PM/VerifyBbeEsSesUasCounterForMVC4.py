@@ -220,13 +220,14 @@ def QS_070_Check_No_Alarm(zq_run, zq_ONT_p1, zq_ONT_p2):
 
 def QS_080_Get_PM_Counter(zq_run, zq_vc4_idx, zq_counter_type, zq_locn, zq_period, zq_dir="RCV"):
 
+    zq_counter = -1
     zq_tl1_res=NE1.tl1.do("RTRV-PM-VC4::{}:::{},0-UP,{},{},{};".format(zq_vc4_idx, zq_counter_type, zq_locn,zq_dir,zq_period))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     zq_cmd=zq_msg.get_cmd_status()
     if zq_cmd == (True,'COMPLD'):
         if zq_msg.get_cmd_response_size() != 0:
             zq_counter=zq_msg.get_cmd_attr_value("{},VC4".format(zq_vc4_idx), "2")
-        
+
     return int(zq_counter)
 
     
@@ -283,20 +284,47 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                     dprint("\tPM counter SES: {}".format(zq_ses),2)
                     dprint("\tPM counter UAS: {}".format(zq_uas),2)
             
-            if zq_period == "BOTH" or zq_period == "1-DAY":  
-                zq_bbe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC", zq_locn, "1-DAY")
-                zq_es  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC", zq_locn, "1-DAY")
-                zq_ses = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC", zq_locn, "1-DAY")
-                zq_uas = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC", zq_locn, "1-DAY")
-                if zq_bbe == 0 and zq_es == 0 and zq_ses == 0 and zq_uas == 0:
-                    dprint("OK\tAll PM counter [{}]-[1-DAY] for {} are 0.".format(zq_locn, zq_vc4_idx1),2)
-                else:
-                    dprint("KO\tSome PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1),2)
-                    dprint("\tPM counter BBE: {}".format(zq_bbe),2)
-                    dprint("\tPM counter  ES: {}".format(zq_es),2)
-                    dprint("\tPM counter SES: {}".format(zq_ses),2)
-                    dprint("\tPM counter UAS: {}".format(zq_uas),2)
-            
+            if zq_period == "BOTH" or zq_period == "1-DAY":
+                if zq_locn == "BIDIR":
+                    zq_bbe_ne = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC-NE", zq_locn, "1-DAY")
+                    zq_bbe_fe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC-FE", zq_locn, "1-DAY")
+                    zq_es_ne  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC-NE", zq_locn, "1-DAY")
+                    zq_es_fe  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC-FE", zq_locn, "1-DAY")
+                    zq_ses_ne = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC-NE", zq_locn, "1-DAY")
+                    zq_ses_fe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC-FE", zq_locn, "1-DAY")
+                    zq_uas_bi = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC-BI", zq_locn, "1-DAY")
+                    if  zq_bbe_ne == 0 and \
+                        zq_bbe_fe == 0 and \
+                        zq_es_ne == 0 and \
+                        zq_es_fe == 0 and \
+                        zq_ses_ne == 0 and \
+                        zq_ses_fe == 0 and \
+                        zq_uas_bi == 0:
+                        dprint("OK\tAll PM counter [{}]-[1-DAY] for {} are 0.".format(zq_locn, zq_vc4_idx1),2)
+                    else:
+                        dprint("KO\tSome PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1),2)
+                        dprint("\tPM counter BBE: {}".format(zq_bbe_ne),2)
+                        dprint("\tPM counter BBE: {}".format(zq_bbe_fe),2)
+                        dprint("\tPM counter  ES: {}".format(zq_es_ne),2)
+                        dprint("\tPM counter  ES: {}".format(zq_es_fe),2)
+                        dprint("\tPM counter SES: {}".format(zq_ses_ne),2)
+                        dprint("\tPM counter SES: {}".format(zq_ses_fe),2)
+                        dprint("\tPM counter UAS: {}".format(zq_uas_bi),2)
+                
+                else:  
+                    zq_bbe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC", zq_locn, "1-DAY")
+                    zq_es  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC", zq_locn, "1-DAY")
+                    zq_ses = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC", zq_locn, "1-DAY")
+                    zq_uas = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC", zq_locn, "1-DAY")
+                    if zq_bbe == 0 and zq_es == 0 and zq_ses == 0 and zq_uas == 0:
+                        dprint("OK\tAll PM counter [{}]-[1-DAY] for {} are 0.".format(zq_locn, zq_vc4_idx1),2)
+                    else:
+                        dprint("KO\tSome PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1),2)
+                        dprint("\tPM counter BBE: {}".format(zq_bbe),2)
+                        dprint("\tPM counter  ES: {}".format(zq_es),2)
+                        dprint("\tPM counter SES: {}".format(zq_ses),2)
+                        dprint("\tPM counter UAS: {}".format(zq_uas),2)
+                
             
             ###################################################################
             # Insert B3 error continuous burst 
@@ -309,6 +337,12 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
             time.sleep(E_TIMEOUT)
             time.sleep(E_TIMEOUT)
             time.sleep(E_TIMEOUT)
+            if zq_locn == "BIDIR":
+                ONT.get_set_error_insertion_type(zq_ONT_p1, "HPREI")
+                time.sleep(E_TIMEOUT)
+                time.sleep(E_TIMEOUT)
+                time.sleep(E_TIMEOUT)
+
             ONT.get_set_error_activation(zq_ONT_p1, "HO", "OFF")
             time.sleep(E_TIMEOUT)
             
@@ -321,26 +355,47 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                 zq_ses = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC", zq_locn, "15-MIN")
                 if zq_bbe != 0 and zq_es != 0 and zq_ses != 0:
                     dprint("OK\tPM counter [{}]-[15-MIN] for {} were incremented.".format(zq_locn, zq_vc4_idx1),2)
-                    dprint("\tPM counter BBE: {}".format(zq_bbe),2)
-                    dprint("\tPM counter  ES: {}".format(zq_es),2)
-                    dprint("\tPM counter SES: {}".format(zq_ses),2)
                 else:
                     dprint("KO\tPM counter [{}]-[15-MIN] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
-                    dprint("\tPM counter BBE: {}".format(zq_bbe),2)
-                    dprint("\tPM counter  ES: {}".format(zq_es),2)
-                    dprint("\tPM counter SES: {}".format(zq_ses),2)
+
+                dprint("\tPM counter BBE: {}".format(zq_bbe),2)
+                dprint("\tPM counter  ES: {}".format(zq_es),2)
+                dprint("\tPM counter SES: {}".format(zq_ses),2)
     
             if zq_period == "BOTH" or zq_period == "1-DAY":  
-                zq_bbe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC", zq_locn, "1-DAY")
-                zq_es  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC", zq_locn, "1-DAY")
-                zq_ses = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC", zq_locn, "1-DAY")
-                if zq_bbe != 0 and zq_es != 0 and zq_ses != 0:
-                    dprint("OK\tPM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1),2)
-                    dprint("\tPM counter BBE: {}".format(zq_bbe),2)
-                    dprint("\tPM counter  ES: {}".format(zq_es),2)
-                    dprint("\tPM counter SES: {}".format(zq_ses),2)
-                else:
-                    dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
+                if zq_locn == "BIDIR":
+                    zq_bbe_ne = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC-NE", zq_locn, "1-DAY")
+                    zq_bbe_fe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC-FE", zq_locn, "1-DAY")
+                    zq_es_ne  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC-NE", zq_locn, "1-DAY")
+                    zq_es_fe  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC-FE", zq_locn, "1-DAY")
+                    zq_ses_ne = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC-NE", zq_locn, "1-DAY")
+                    zq_ses_fe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC-FE", zq_locn, "1-DAY")
+                    if  zq_bbe_ne != 0 and \
+                        zq_bbe_fe != 0 and \
+                        zq_es_ne != 0 and \
+                        zq_es_fe != 0 and \
+                        zq_ses_ne != 0 and \
+                        zq_ses_fe != 0: 
+                        dprint("OK\tPM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1),2)
+                    else:
+                        dprint("KO\tSome PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
+
+                    dprint("\tPM counter BBE-NE: {}".format(zq_bbe_ne),2)
+                    dprint("\tPM counter BBE-FE: {}".format(zq_bbe_fe),2)
+                    dprint("\tPM counter  ES-NE: {}".format(zq_es_ne),2)
+                    dprint("\tPM counter  ES-FE: {}".format(zq_es_fe),2)
+                    dprint("\tPM counter SES-NE: {}".format(zq_ses_ne),2)
+                    dprint("\tPM counter SES-FE: {}".format(zq_ses_fe),2)
+                
+                else:  
+                    zq_bbe = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC", zq_locn, "1-DAY")
+                    zq_es  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"ES-HOVC", zq_locn, "1-DAY")
+                    zq_ses = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC", zq_locn, "1-DAY")
+                    if zq_bbe != 0 and zq_es != 0 and zq_ses != 0:
+                        dprint("OK\tPM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1),2)
+                    else:
+                        dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
+
                     dprint("\tPM counter BBE: {}".format(zq_bbe),2)
                     dprint("\tPM counter  ES: {}".format(zq_es),2)
                     dprint("\tPM counter SES: {}".format(zq_ses),2)
@@ -353,10 +408,17 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
             ###################################################################
             ONT.get_set_num_errored_burst_frames(zq_ONT_p1, "HO", zq_num_err_free)
             ONT.get_set_num_not_errored_burst_frames(zq_ONT_p1, "HO", zq_num_err)
+            ONT.get_set_error_insertion_type(zq_ONT_p1, zq_alm_type)
             ONT.get_set_error_activation(zq_ONT_p1, "HO", "ON")
             time.sleep(E_TIMEOUT)
             time.sleep(E_TIMEOUT)
             time.sleep(E_TIMEOUT)
+            if zq_locn == "BIDIR":
+                ONT.get_set_error_insertion_type(zq_ONT_p1, "HPREI")
+                time.sleep(E_TIMEOUT)
+                time.sleep(E_TIMEOUT)
+                time.sleep(E_TIMEOUT)
+
             ONT.get_set_error_activation(zq_ONT_p1, "HO", "OFF")
             time.sleep(E_TIMEOUT)
             
@@ -373,20 +435,26 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                     dprint("KO\tPM counter [{}]-[15-MIN] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
                     dprint("\tPM counter UAS: {}".format(zq_uas),2)
                 
-            if zq_period == "BOTH" or zq_period == "1-DAY":  
-                zq_uas = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC", zq_locn, "1-DAY")
-                
-                if zq_uas != 0:
-                    dprint("OK\tPM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1),2)
-                    dprint("\tPM counter UAS: {}".format(zq_uas),2)
+            if zq_period == "BOTH" or zq_period == "1-DAY":
+                if zq_locn == "BIDIR":  
+                    zq_uas_bi = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC-BI", zq_locn, "1-DAY")
+                    if zq_uas_bi != 0:
+                        dprint("OK\tPM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1),2)
+                        dprint("\tPM counter UAS-BI: {}".format(zq_uas_bi),2)
+                    else:
+                        dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
+                        dprint("\tPM counter UAS-BI: {}".format(zq_uas_bi),2)
+                    
                 else:
-                    dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
-                    dprint("\tPM counter UAS: {}".format(zq_uas),2)
+                    zq_uas = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC", zq_locn, "1-DAY")
+                    
+                    if zq_uas != 0:
+                        dprint("OK\tPM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1),2)
+                        dprint("\tPM counter UAS: {}".format(zq_uas),2)
+                    else:
+                        dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
+                        dprint("\tPM counter UAS: {}".format(zq_uas),2)
                 
-
-
-
-
             
             #Disable PM ALL 15-MIN and 1-DAY
             zq_tl1_res=NE1.tl1.do("SET-PMMODE-VC4::{}:::{},ALL,DISABLED,{}:TMPER={};".format(zq_vc4_idx1, zq_locn,zq_dir,zq_period))
@@ -474,22 +542,7 @@ class Test(TestCase):
         self.start_tps_block(NE1.id,"PM","5-5-7-4")
         self.start_tps_block(NE1.id,"PM","5-5-7-5")
 
-        self.stop_tps_block(NE1.id,"PM","5-5-5-1")
-        self.stop_tps_block(NE1.id,"PM","5-5-5-2")
-        self.stop_tps_block(NE1.id,"PM","5-5-5-3")
-        self.stop_tps_block(NE1.id,"PM","5-5-5-4")
-        self.stop_tps_block(NE1.id,"PM","5-5-5-5")
-        self.stop_tps_block(NE1.id,"PM","5-5-6-1")
-        self.stop_tps_block(NE1.id,"PM","5-5-6-2")
-        self.stop_tps_block(NE1.id,"PM","5-5-6-3")
-        self.stop_tps_block(NE1.id,"PM","5-5-6-4")
-        self.stop_tps_block(NE1.id,"PM","5-5-6-5")
-        self.stop_tps_block(NE1.id,"PM","5-5-7-1")
-        self.stop_tps_block(NE1.id,"PM","5-5-7-2")
-        self.stop_tps_block(NE1.id,"PM","5-5-7-3")
-        self.stop_tps_block(NE1.id,"PM","5-5-7-4")
-        self.stop_tps_block(NE1.id,"PM","5-5-7-5")
-
+        
 
         E_LO_MTX = "MXH60GLO"
         E_HO_TI = 'X4F4E5420484F2D5452414345202020' #'ONT HO-TRACE   '
@@ -520,14 +573,24 @@ class Test(TestCase):
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'COMPLD'):
-            zq_attr_list=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
-            if zq_attr_list['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
-                print("Board already equipped")
+            zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
+            if zq_attr_list1 is not None:
+                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                    print("Board already equipped")
+                else:
+                    zq_filter=TL1check()
+                    zq_filter.add_pst("IS")
+                    zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                    NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                zq_filter=TL1check()
-                zq_filter.add_pst("IS")
-                zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-                NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+                if zq_attr_list2 is not None:
+                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                        zq_filter=TL1check()
+                        zq_filter.add_pst("IS")
+                        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                        NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+
 
         '''
         Find 4 free slots and equip 4 x 1P10GSOE
@@ -562,7 +625,7 @@ class Test(TestCase):
         NE1_stm64p6 = (''.join(zq_board_to_remove[3]).replace('10GSO-',''))+'-1'
         
         print("\n******************************************************************************")
-        print("\n                                                                              ")
+        print("\n   CHECK 2xMVC4 in FIRST BLOCK                                                ")
         print("\n******************************************************************************")
         '''
         CHECK FIRST 128 BLOCK of MVC4 
@@ -605,13 +668,13 @@ class Test(TestCase):
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
         print("\n******************************************************************************")
 
-        #QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "NEND","BOTH","RCV","HPBIP")
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "NEND","BOTH","RCV","HPBIP")
         
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER FAR END 15-MIN/1-DAY                     ")
         print("\n******************************************************************************")
 
-        #QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "FEND","BOTH","RCV","HPREI")
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2, "FEND","BOTH","RCV","HPREI")
         
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
@@ -626,14 +689,103 @@ class Test(TestCase):
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
 
         print("\n******************************************************************************")
-        print("\n                                                                              ")
+        print("\n   CHECK 2xMVC4 in SECOND BLOCK                                               ")
         print("\n******************************************************************************")
 
+        zq_xc_list=list()
+        zq_xc_list.append("EMPTY,EMPTY")
 
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p4, 1, E_BLOCK_SIZE, zq_xc_list)
 
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
 
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_1, 1, E_HO_TI)
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_2_2, 1, E_HO_TI)
+        
+        QS_030_Create_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
+        
+        time.sleep(E_WAIT)
+        
+        print("\n******************************************************************************")
+        print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
+        print("\n******************************************************************************")
 
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "NEND","BOTH","RCV","HPBIP")
+        
+        print("\n******************************************************************************")
+        print("\n       VERIFY BBE-ES-SES-UAS COUNTER FAR END 15-MIN/1-DAY                     ")
+        print("\n******************************************************************************")
 
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "FEND","BOTH","RCV","HPREI")
+        
+        print("\n******************************************************************************")
+        print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
+        print("\n******************************************************************************")
+
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2, "BIDIR","1-DAY","RCV","HPBIP")
+        
+        QS_060_Delete_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
+        
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p4, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, E_BLOCK_SIZE*2+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE*3+1, E_BLOCK_SIZE, zq_xc_list)
+
+        
+        print("\n******************************************************************************")
+        print("\n   CHECK 2xMVC4 in THIRD BLOCK                                                ")
+        print("\n******************************************************************************")
+
+        zq_xc_list=list()
+        zq_xc_list.append("EMPTY,EMPTY")
+
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p5, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p6, 1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p4, 1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_010_Create_HO_XC_Block(self, NE1_stm64p2, 1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_1, 1, E_HO_TI)
+        QS_050_Modify_MVC4_HO_Trace_Block(self, zq_mtxlo_slot, E_VC4_3_2, 1, E_HO_TI)
+        
+        QS_030_Create_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
+        
+        time.sleep(E_WAIT)
+        
+        print("\n******************************************************************************")
+        print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
+        print("\n******************************************************************************")
+
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "NEND","BOTH","RCV","HPBIP")
+        
+        print("\n******************************************************************************")
+        print("\n       VERIFY BBE-ES-SES-UAS COUNTER FAR END 15-MIN/1-DAY                     ")
+        print("\n******************************************************************************")
+
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "FEND","BOTH","RCV","HPREI")
+        
+        print("\n******************************************************************************")
+        print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
+        print("\n******************************************************************************")
+
+        QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2, "BIDIR","1-DAY","RCV","HPBIP")
+        
+        QS_060_Delete_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
+        
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p5, 1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p6, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
+
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, E_BLOCK_SIZE*2+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p4, E_BLOCK_SIZE*3+1, E_BLOCK_SIZE, zq_xc_list)
+        
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, E_BLOCK_SIZE*4+1, E_BLOCK_SIZE, zq_xc_list)
+        QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE*5+1, E_BLOCK_SIZE, zq_xc_list)
 
 
         '''
@@ -654,6 +806,22 @@ class Test(TestCase):
             NE1.tl1.do_until("RTRV-EQPT::{};".format(''.join(zq_board_to_remove[zq_i]).replace('10GSO','MDL')),zq_filter)
             print('Board Deleted: {}'.format(''.join(zq_board_to_remove[zq_i]).replace('10GSO','MDL')))
 
+
+        self.stop_tps_block(NE1.id,"PM","5-5-5-1")
+        self.stop_tps_block(NE1.id,"PM","5-5-5-2")
+        self.stop_tps_block(NE1.id,"PM","5-5-5-3")
+        self.stop_tps_block(NE1.id,"PM","5-5-5-4")
+        self.stop_tps_block(NE1.id,"PM","5-5-5-5")
+        self.stop_tps_block(NE1.id,"PM","5-5-6-1")
+        self.stop_tps_block(NE1.id,"PM","5-5-6-2")
+        self.stop_tps_block(NE1.id,"PM","5-5-6-3")
+        self.stop_tps_block(NE1.id,"PM","5-5-6-4")
+        self.stop_tps_block(NE1.id,"PM","5-5-6-5")
+        self.stop_tps_block(NE1.id,"PM","5-5-7-1")
+        self.stop_tps_block(NE1.id,"PM","5-5-7-2")
+        self.stop_tps_block(NE1.id,"PM","5-5-7-3")
+        self.stop_tps_block(NE1.id,"PM","5-5-7-4")
+        self.stop_tps_block(NE1.id,"PM","5-5-7-5")
 
 
     def test_cleanup(self):
