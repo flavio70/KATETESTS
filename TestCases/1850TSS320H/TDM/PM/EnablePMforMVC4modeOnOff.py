@@ -50,7 +50,7 @@ def dprint(zq_str,zq_level):
 
 def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
     
-    zq_tl1_res=NE1.tl1.do("RTRV-PTF::MVC4-{}-1&&-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot, zq_sst_counter_exp))
+    zq_tl1_res=NE1.tl1.do("RTRV-PTF::MVC4-{}-1&&-384::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     zq_cmd=zq_msg.get_cmd_status()
     zq_sst_counter=0
