@@ -338,10 +338,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
     ONT.get_set_error_activation(zq_ONT_p1, "HO", "ON")
     time.sleep(E_TIMEOUT)
     time.sleep(E_TIMEOUT)
-    time.sleep(E_TIMEOUT)
     if zq_locn == "BIDIR":
         ONT.get_set_error_insertion_type(zq_ONT_p1, "HPREI")
-        time.sleep(E_TIMEOUT)
         time.sleep(E_TIMEOUT)
         time.sleep(E_TIMEOUT)
 
@@ -420,10 +418,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
     ONT.get_set_error_activation(zq_ONT_p1, "HO", "ON")
     time.sleep(E_TIMEOUT)
     time.sleep(E_TIMEOUT)
-    time.sleep(E_TIMEOUT)
     if zq_locn == "BIDIR":
         ONT.get_set_error_insertion_type(zq_ONT_p1, "HPREI")
-        time.sleep(E_TIMEOUT)
         time.sleep(E_TIMEOUT)
         time.sleep(E_TIMEOUT)
 
@@ -497,7 +493,7 @@ def QS_120_Verify_PM_Counter_Zero(zq_run, zq_vc4_idx):
     if zq_cmd == (True,'COMPLD'):
         if zq_msg.get_cmd_response_size() != 0:
             zq_temp_ary = zq_msg._TL1message__m_plain.split("\r\n")
-            for zq_i in range(1,len(zq_temp_ary)):
+            for zq_i in range(1,len(zq_temp_ary)-2):
                 if zq_temp_ary[zq_i].find("{}".format(zq_vc4_idx)) > 0:
                     zq_counter_ary = zq_temp_ary[zq_i].split(",")
                     zq_aid = zq_counter_ary[0].replace("\"","")
@@ -508,6 +504,18 @@ def QS_120_Verify_PM_Counter_Zero(zq_run, zq_vc4_idx):
                     
     return int(zq_counter)
 
+
+def QS_900_Set_Date(zq_date,zq_time):
+
+    zq_tl1_res=NE1.tl1.do("ED-DAT:::::{},{};".format(zq_date,zq_time))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        dprint("OK\tNE date & time changed to {} & {}".format(zq_date,zq_time),2)
+    else:
+        dprint("KO\tNE date & time change failure",2)
+
+    return
 
 
 class Test(TestCase):
@@ -700,6 +708,8 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
+        QS_900_Set_Date("16-05-01", "01-00-00")
+
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
         print("\n******************************************************************************")
@@ -719,8 +729,22 @@ class Test(TestCase):
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "15-MIN")
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "1-DAY")
             
+            time.sleep(5)
 
+            print("\n******************************************************************************")
+            print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
+            print("\n******************************************************************************")
+
+            if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
+                dprint("OK\tAll PM counters were reset",2)
+                self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
+            else:
+                dprint("KO\tSome PM counters were NOT reset",2)
+                self.add_failure(NE1, "PM counter reset","0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
             
+            
+            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
+           
 
             print("\n******************************************************************************")
             print("\n       VERIFY BBE-ES-SES-UAS COUNTER FAR END 15-MIN/1-DAY                     ")
@@ -733,17 +757,7 @@ class Test(TestCase):
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "15-MIN")
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "1-DAY")
             
-
-            print("\n******************************************************************************")
-            print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
-            print("\n******************************************************************************")
-    
-            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "ON", "1-DAY")
-
-            QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
-
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "BIDIR", "1-DAY")
-            
+            time.sleep(5)
 
             print("\n******************************************************************************")
             print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
@@ -754,14 +768,37 @@ class Test(TestCase):
                 self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
             else:
                 dprint("KO\tSome PM counters were NOT reset",2)
-                self.add_failure(NE1, "PM counter reset", "PM counter reset not successful", "Some PM counters were NOT reset")
+                self.add_failure(NE1, "PM counter reset","0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
             
-            
-            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "DISABLED", "BOTH")
-            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "DISABLED", "1-DAY")
-        
 
+            
+            print("\n******************************************************************************")
+            print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
+            print("\n******************************************************************************")
+    
+            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "ON", "1-DAY")
+
+            QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
+
+            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "BIDIR", "1-DAY")
+            
+            time.sleep(5)
+
+            print("\n******************************************************************************")
+            print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
+            print("\n******************************************************************************")
+
+            if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
+                dprint("OK\tAll PM counters were reset",2)
+                self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
+            else:
+                dprint("KO\tSome PM counters were NOT reset",2)
+                self.add_failure(NE1, "PM counter reset","0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
+            
+            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "DISABLED", "1-DAY")
+
+ 
         QS_060_Delete_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
         
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p1, 1, E_BLOCK_SIZE, zq_xc_list)
@@ -786,6 +823,8 @@ class Test(TestCase):
         QS_030_Create_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
         
         time.sleep(E_WAIT)
+
+        QS_900_Set_Date("16-05-01", "01-00-00")
         
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -806,8 +845,20 @@ class Test(TestCase):
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "15-MIN")
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "1-DAY")
             
-
+            time.sleep(5)
             
+            print("\n******************************************************************************")
+            print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
+            print("\n******************************************************************************")
+
+            if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
+                dprint("OK\tAll PM counters were reset",2)
+                self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
+            else:
+                dprint("KO\tSome PM counters were NOT reset",2)
+                self.add_failure(NE1, "PM counter reset", "0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
+            
+            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
             
             print("\n******************************************************************************")
             print("\n       VERIFY BBE-ES-SES-UAS COUNTER FAR END 15-MIN/1-DAY                     ")
@@ -820,18 +871,7 @@ class Test(TestCase):
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "15-MIN")
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "1-DAY")
             
-
-            
-            
-            print("\n******************************************************************************")
-            print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
-            print("\n******************************************************************************")
-    
-            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "ON", "1-DAY")
-            
-            QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
-
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "BIDIR", "1-DAY")
+            time.sleep(5)
             
             print("\n******************************************************************************")
             print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
@@ -842,13 +882,36 @@ class Test(TestCase):
                 self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
             else:
                 dprint("KO\tSome PM counters were NOT reset",2)
-                self.add_failure(NE1, "PM counter reset", "PM counter reset not successful", "Some PM counters were NOT reset")
+                self.add_failure(NE1, "PM counter reset", "0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
             
-            
-            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "DISABLED", "BOTH")
+            
+            print("\n******************************************************************************")
+            print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
+            print("\n******************************************************************************")
+    
+            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "ON", "1-DAY")
+            
+            QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
+
+            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "BIDIR", "1-DAY")
+
+            time.sleep(5)
+
+            print("\n******************************************************************************")
+            print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
+            print("\n******************************************************************************")
+
+            if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
+                dprint("OK\tAll PM counters were reset",2)
+                self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
+            else:
+                dprint("KO\tSome PM counters were NOT reset",2)
+                self.add_failure(NE1, "PM counter reset", "0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
+            
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "DISABLED", "1-DAY")
             
+
         QS_060_Delete_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
         
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p3, 1, E_BLOCK_SIZE, zq_xc_list)
@@ -880,6 +943,8 @@ class Test(TestCase):
         QS_030_Create_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
         
         time.sleep(E_WAIT)
+
+        QS_900_Set_Date("16-05-01", "01-00-00")
         
         zq_vc4_ch1="{}.1.1.1".format(str(E_VC4_3_1 % E_BLOCK_SIZE))
         zq_vc4_ch2="{}.1.1.1".format(str(E_VC4_3_2 % E_BLOCK_SIZE))
@@ -900,8 +965,20 @@ class Test(TestCase):
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "15-MIN")
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "1-DAY")
             
-
+            time.sleep(5)
             
+            print("\n******************************************************************************")
+            print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
+            print("\n******************************************************************************")
+
+            if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
+                dprint("OK\tAll PM counters were reset",2)
+                self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
+            else:
+                dprint("KO\tSome PM counters were NOT reset",2)
+                self.add_failure(NE1, "PM counter reset", "0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
+            
+            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
             
             print("\n******************************************************************************")
             print("\n       VERIFY BBE-ES-SES-UAS COUNTER FAR END 15-MIN/1-DAY                     ")
@@ -914,8 +991,20 @@ class Test(TestCase):
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "15-MIN")
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "1-DAY")
             
-
+            time.sleep(5)
             
+            print("\n******************************************************************************")
+            print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
+            print("\n******************************************************************************")
+            
+            if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
+                dprint("OK\tAll PM counters were reset",2)
+                self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
+            else:
+                dprint("KO\tSome PM counters were NOT reset",2)
+                self.add_failure(NE1, "PM counter reset", "0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
+            
+            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "DISABLED", "BOTH")
 
             print("\n******************************************************************************")
             print("\n       VERIFY BBE-ES-SES-UAS COUNTER BIDIR 1-DAY                              ")
@@ -926,6 +1015,8 @@ class Test(TestCase):
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
 
             QS_110_Init_PM_Counter(self, zq_vc4_idx1, "BIDIR", "1-DAY")
+
+            time.sleep(5)
             
             print("\n******************************************************************************")
             print("\n       VERIFY ALL COUNTERS = 0 AFTER RESET                                    ")
@@ -936,12 +1027,8 @@ class Test(TestCase):
                 self.add_success(NE1, "PM counter reset","0.0", "All PM counters were reset")
             else:
                 dprint("KO\tSome PM counters were NOT reset",2)
-                self.add_failure(NE1, "PM counter reset", "PM counter reset not successful", "Some PM counters were NOT reset")
+                self.add_failure(NE1, "PM counter reset", "0.0", "PM counter reset not successful", "Some PM counters were NOT reset")
             
-
-            
-            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
-            QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "DISABLED", "BOTH")
             
         QS_060_Delete_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
