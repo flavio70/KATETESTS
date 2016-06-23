@@ -794,7 +794,6 @@ class Test(TestCase):
             print("\n       WAIT BBE-ES-SES TCA 15-MIN CLEARING                                    ")
             print("\n******************************************************************************")
 
-            NE1.tl1.event_collection_start()
 
             for zq_i in range(1,180):
                 time.sleep(10)
@@ -884,7 +883,6 @@ class Test(TestCase):
             print("\n       WAIT BBE-ES-SES TCA 1-DAY CLEARING                                     ")
             print("\n******************************************************************************")
 
-            NE1.tl1.event_collection_start()
 
             QS_900_Set_Date("16-05-01", "23-59-30")
 
@@ -1023,7 +1021,6 @@ class Test(TestCase):
             print("\n       WAIT BBE-ES-SES TCA 15-MIN CLEARING                                    ")
             print("\n******************************************************************************")
 
-            NE1.tl1.event_collection_start()
 
             for zq_i in range(1,180):
                 time.sleep(10)
