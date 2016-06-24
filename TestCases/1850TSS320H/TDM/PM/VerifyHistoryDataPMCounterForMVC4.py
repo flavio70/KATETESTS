@@ -307,7 +307,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                     dprint("OK\tAll PM counter [{}]-[15-MIN] for {} are 0.".format(zq_locn, zq_vc4_idx1),2)
                     zq_run.add_success(NE1, "All PM counter [{}]-[15-MIN] for {} are 0.".format(zq_locn, zq_vc4_idx1),"0.0", "PM Counter Reading")
                 else:
-                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "Some PM counter [{}]-[15-MIN] for {} not 0.".format(zq_locn, zq_vc4_idx1))
+                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM Counter Reading Failure","Some PM counter [{}]-[15-MIN] for {} not 0.".format(zq_locn, zq_vc4_idx1))
                     dprint("KO\tSome PM counter [{}]-[15-MIN] for {} not 0.".format(zq_locn, zq_vc4_idx1),2)
                     dprint("\tPM counter BBE: {}".format(zq_bbe),2)
                     dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -322,7 +322,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                     dprint("OK\tAll PM counter [{}]-[1-DAY] for {} are 0.".format(zq_locn, zq_vc4_idx1),2)
                     zq_run.add_success(NE1, "All PM counter [{}]-[1-DAY] for {} are 0.".format(zq_locn, zq_vc4_idx1),"0.0", "PM Counter Reading")
                 else:
-                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "Some PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1))
+                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM Counter Reading Failure", "Some PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1))
                     dprint("KO\tSome PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1),2)
                     dprint("\tPM counter BBE: {}".format(zq_bbe),2)
                     dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -347,7 +347,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                     dprint("OK\tAll PM counter [{}]-[1-DAY] for {} are 0.".format("BIDIR", zq_vc4_idx1),2)
                     zq_run.add_success(NE1, "All PM counter [{}]-[1-DAY] for {} are 0.".format("BIDIR", zq_vc4_idx1),"0.0", "PM Counter Reading")
                 else:
-                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "Some PM counter [{}]-[1-DAY] for {} not 0.".format("BIDIR", zq_vc4_idx1))
+                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM Counter Reading Failure","Some PM counter [{}]-[1-DAY] for {} not 0.".format("BIDIR", zq_vc4_idx1))
                     dprint("KO\tSome PM counter [{}]-[1-DAY] for {} not 0.".format("BIDIR", zq_vc4_idx1),2)
                     dprint("\tPM counter BBE-NE: {}".format(zq_bbe_ne),2)
                     dprint("\tPM counter BBE-FE: {}".format(zq_bbe_fe),2)
@@ -411,7 +411,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                     zq_run.add_success(NE1, "All PM counter [{}]-[1-DAY] for {} are 0.".format("NEND", zq_vc4_idx1),"0.0", "PM Counter Reading")
                 else:
                     dprint("KO\tPM counter [{}]-[15-MIN] for {} were incremented.".format("NEND", zq_vc4_idx1),2)
-                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[15-MIN] for {} were incremented.".format("NEND", zq_vc4_idx1))
+                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM Counter Reading", "PM counter [{}]-[15-MIN] for {} were incremented.".format("NEND", zq_vc4_idx1))
     
                 dprint("\tPM counter BBE: {}".format(zq_bbe),2)
                 dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -433,7 +433,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                     zq_run.add_success(NE1, "PM counter [{}]-[15-MIN] for {} were incremented.".format("FEND", zq_vc4_idx1),"0.0", "PM Counter Reading")
                 else:
                     dprint("KO\tPM counter [{}]-[15-MIN] for {} are still 0.".format("FEND", zq_vc4_idx1),2)
-                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[15-MIN] for {} are still 0.".format("FEND", zq_vc4_idx1))
+                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM Counter Reading","PM counter [{}]-[15-MIN] for {} are still 0.".format("FEND", zq_vc4_idx1))
     
                 dprint("\tPM counter BBE: {}".format(zq_bbe),2)
                 dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -463,7 +463,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                     zq_run.add_success(NE1, "PM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1),"0.0", "PM Counter Reading")
                 else:
                     dprint("KO\tSome PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
-                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "Some PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
+                    zq_run.add_failure(NE1, "PM Counter Reading","0.0", "PM Counter Reading", "Some PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
 
                 dprint("\tPM counter BBE-NE: {}".format(zq_bbe_ne),2)
                 dprint("\tPM counter BBE-FE: {}".format(zq_bbe_fe),2)
