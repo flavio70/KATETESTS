@@ -605,6 +605,24 @@ class Test(TestCase):
         zq_xc_list.append("EMPTY,EMPTY")
 
         '''
+        CREATE TCA PROFILE "AD HOC" TO FASTER TEST EXECUTION
+        '''
+        zq_tl1_res=NE1.tl1.do("ENT-TH-PROF:::::VC4:DFLT=N,USERLABEL=TCAAutomtest;")
+
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::NEND,:MONTYPE-TMPER=ES-HOVC-15-MIN,THLEV=50,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::NEND,:MONTYPE-TMPER=ES-HOVC-1-DAY,THLEV=50,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::FEND,:MONTYPE-TMPER=ES-HOVC-15-MIN,THLEV=50,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::FEND,:MONTYPE-TMPER=ES-HOVC-1-DAY,THLEV=50,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::NEND,:MONTYPE-TMPER=SES-HOVC-15-MIN,THLEV=5,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::NEND,:MONTYPE-TMPER=SES-HOVC-1-DAY,THLEV=5,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::FEND,:MONTYPE-TMPER=SES-HOVC-15-MIN,THLEV=5,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::FEND,:MONTYPE-TMPER=SES-HOVC-1-DAY,THLEV=5,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::NEND,:MONTYPE-TMPER=BBE-HOVC-15-MIN,THLEV=12000,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::NEND,:MONTYPE-TMPER=BBE-HOVC-1-DAY,THLEV=12000,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::FEND,:MONTYPE-TMPER=BBE-HOVC-15-MIN,THLEV=12000,DIRN=RCV;")
+        zq_tl1_res=NE1.tl1.do("ED-TH-PROF::THPVC4-2:::FEND,:MONTYPE-TMPER=BBE-HOVC-1-DAY,THLEV=12000,DIRN=RCV;")
+        
+        '''
         Board equipment if not yet!
         '''
         zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
@@ -713,7 +731,7 @@ class Test(TestCase):
          
         zq_vc4_idx1 = "MVC4-{}-{}".format(zq_mtxlo_slot,str(E_VC4_1_1))
         zq_vc4_idx2 = "MVC4-{}-{}".format(zq_mtxlo_slot,str(E_VC4_1_2)) 
-        
+
         zq_tl1_res=NE1.tl1.do("ED-PTF::{}::::TCAprof=TCAAutomtest;".format(zq_vc4_idx1))
         zq_tl1_res=NE1.tl1.do("ED-PTF::{}::::TCAprof=TCAAutomtest;".format(zq_vc4_idx2))
     
@@ -1392,7 +1410,8 @@ class Test(TestCase):
             NE1.tl1.do_until("RTRV-EQPT::{};".format(''.join(zq_board_to_remove[zq_i]).replace('10GSO','MDL')),zq_filter)
             print('Board Deleted: {}'.format(''.join(zq_board_to_remove[zq_i]).replace('10GSO','MDL')))
 
-
+        zq_tl1_res=NE1.tl1.do("DLT-TH-PROF::THPVC4-2:;")
+        
         self.stop_tps_block(NE1.id,"PM","5-5-13-1")
         self.stop_tps_block(NE1.id,"PM","5-5-13-2")
         self.stop_tps_block(NE1.id,"PM","5-5-13-3")
