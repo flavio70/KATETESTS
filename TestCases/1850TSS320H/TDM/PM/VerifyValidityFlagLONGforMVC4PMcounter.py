@@ -5,11 +5,12 @@ TestCase template for K@TE test developers
 :field Description: This test provides a method to verify the behavior of the validity  
 :field Description: flag for the PM counters of MVC4 facilities, when counters are reset.
 :field Description: The LONG flag for first history entry is being checked.
+:field Description: REMARK: History for 1-DAY are not checked (see comments) for time reason.
 :field Topology: 5
 :field Dependency: NA
 :field Lab: SVT
-:field TPS: PM__5-5-23-1
-:field TPS: PM__5-5-23-2
+:field TPS: PM__5-5-17-1
+:field TPS: PM__5-5-17-2
 :field RunSections: 11111
 :field Author: tosima
 
@@ -454,7 +455,6 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
         
     return
 
-
 def QS_120_Verify_PM_Counter_Zero(zq_run, zq_vc4_idx):
 
     zq_counter = 0
@@ -482,14 +482,23 @@ def QS_200_Verify_Validity_Flag(zq_run, zq_vc4_idx, zq_locn, zq_period, zq_val_f
 
     zq_str = ""
     zq_res = False
-    zq_tl1_res=NE1.tl1.do("RTRV-PM-VC4::{}:::{},0-UP,{},{},{};".format(zq_vc4_idx, zq_counter_type, zq_locn, zq_dir, zq_period))
+    if zq_val_flag_exp == 'COMPL':
+        zq_tl1_res=NE1.tl1.do("RTRV-PM-VC4::{}:::{},0-UP,{},{},{};".format(zq_vc4_idx, zq_counter_type, zq_locn, zq_dir, zq_period))
+    else:
+        if zq_period == '15-MIN':
+            #RTRV-PM-VC4::MVC4-1-1-7-34:::,1-UP,ALL,RCV,15-MIN,,,ALL;
+            zq_tl1_res=NE1.tl1.do("RTRV-PM-VC4::{}:::{},1-UP,{},{},{},,,ALL;".format(zq_vc4_idx, zq_counter_type, zq_locn, zq_dir, zq_period))
+        else:
+            #RTRV-PM-VC4::MVC4-1-1-7-34:::,1-UP,ALL,RCV,1-DAY,,,,ALL;
+            zq_tl1_res=NE1.tl1.do("RTRV-PM-VC4::{}:::{},1-UP,{},{},{},,,,ALL;".format(zq_vc4_idx, zq_counter_type, zq_locn, zq_dir, zq_period))
+
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     zq_cmd=zq_msg.get_cmd_status()
     if zq_cmd == (True,'COMPLD'):
         if zq_msg.get_cmd_response_size() != 0:
             zq_temp_ary = zq_msg._TL1message__m_plain.split("\r\n")
             for zq_i in range(1,len(zq_temp_ary)):
-                if zq_temp_ary[zq_i].find("{}:VC4".format(zq_vc4_idx)) > 0:
+                if zq_temp_ary[zq_i].find("{},VC4".format(zq_vc4_idx)) > 0:
                     zq_cnt_ary = zq_temp_ary[zq_i].split(",")
                     zq_cnt_ary[2] = ""
                     zq_cnt_ary[7] = "" 
@@ -538,9 +547,21 @@ def QS_910_Wait_Quarter():
         zq_date_time=zq_msg.get_time_stamp()
         zq_time = zq_date_time[1]
         zq_min =  zq_date_time[1].split(":")
-        zq_wait = 15-(int(zq_min[1])%15)+1
+        #1 minuto e 1/2 in piu' rispetto allo scadere del quarto d'ora
+        zq_wait = (15-(int(zq_min[1])%15)+1)*60 + 30  
 
     return(zq_wait)
+
+
+def QS_920_Get_Date_Time():
+    
+    zq_tl1_res=NE1.tl1.do("RTRV-HDR;")
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        zq_date_time=zq_msg.get_time_stamp()
+
+    return(zq_date_time)
 
 
 class Test(TestCase):
@@ -570,8 +591,7 @@ class Test(TestCase):
         insert DUT SetUp code for your test below
         '''
         NE1.tl1.do("ACT-USER::admin:::Alcatel1;")
-           
-
+ 
     def test_setup(self):
         '''
         test Setup Section implementation
@@ -723,7 +743,7 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date("16-05-01", "23-55-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY VALIDITY FLAG LONG - 2xMVC4 in first block                       ")
@@ -749,264 +769,159 @@ class Test(TestCase):
                 dprint("KO\tSome PM counters are NOT = 0",2)
                 self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0")
 
+            zq_time = QS_910_Wait_Quarter()
+            time.sleep(zq_time)
+
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "NEND","BOTH","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "FEND","BOTH","RCV","HPREI")
+            
+            zq_date_time=QS_920_Get_Date_Time()
+            zq_date = zq_date_time[0]
+            zq_time = zq_date_time[1]
+            zq_time_ary = zq_time.split(":")
+            zq_time_ary[1] = str(int(zq_time_ary[1]) - 2)
+            zq_time = "-".join(zq_time_ary)
+            
+            QS_900_Set_Date(zq_date, zq_time)
+            
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPREI")
-
-            #VERIFY FLAG IS COMPL
-            zq_res = True
-            zq_str = ""
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC-BI,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
 
 
             #WAIT QUARTER
             zq_wait = QS_910_Wait_Quarter()
-            time.sleep(zq_wait*60)
+            dprint("\tWaiting {} sec. for quarter.".format(zq_wait),2)
+            time.sleep(zq_wait)
 
 
             #VERIFY FLAG IS LONG FOR 15-MIN
             zq_res = True
             zq_str = ""
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:BBE-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:ES-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:SES-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:UAS-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:BBE-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:ES-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:SES-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
                                                   "{},VC4:UAS-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-
+            #
             #VERIFY FLAG IS LONG FOR 24-HOUR
-            QS_900_Set_Date("16-05-01", "23-59-30")
-            #WAIT 2 MINUTE TO BE SURE HISTORY ARE COLLECTED!
-            time.sleep(120)
+            #
+            #SKIPPED BECAUSE THIS TEST WILL WASTE TIME! MORE THAN 3 DAYS TO CHECK 15 COUNTERS FLAGS!
+            #
+            '''
+            time.sleep(86400)
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:BBE-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:ES-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:SES-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:UAS-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:BBE-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:ES-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:SES-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:UAS-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
 
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:BBE-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:BBE-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:ES-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:ES-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:SES-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:SES-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "LONG", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
                                                   "{},VC4:UAS-HOVC-BI,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
-            
+            '''
             
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "DISABLED", "BOTH")
@@ -1019,7 +934,7 @@ class Test(TestCase):
         QS_020_Delete_HO_XC_Block(self, NE1_stm64p2, E_BLOCK_SIZE+1, E_BLOCK_SIZE, zq_xc_list)
 
         print("\n******************************************************************************")
-        print("\n       VERIFY VALIDITY FLAG PRTL - 2xMVC4 in second block                      ")
+        print("\n       VERIFY VALIDITY FLAG LONG - 2xMVC4 in second block                      ")
         print("\n******************************************************************************")
 
         #Delete ALL PM data for 15min/24hour
@@ -1042,7 +957,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "02-00-00")
+        QS_900_Set_Date("16-05-01", "23-55-00")
         
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -1060,8 +975,6 @@ class Test(TestCase):
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "ON", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "ON", "1-DAY")
             
-            #WAIT FIRST QUARTER WHITHOUT 
-            time.sleep(16*60)
 
             if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
                 dprint("OK\tAll PM counters are = 0",2)
@@ -1070,276 +983,164 @@ class Test(TestCase):
                 dprint("KO\tSome PM counters are NOT = 0",2)
                 self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0")
 
+            zq_time = QS_910_Wait_Quarter()
+            time.sleep(zq_time)
+
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "NEND","BOTH","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "FEND","BOTH","RCV","HPREI")
+            
+            zq_date_time=QS_920_Get_Date_Time()
+            zq_date = zq_date_time[0]
+            zq_time = zq_date_time[1]
+            zq_time_ary = zq_time.split(":")
+            zq_time_ary[1] = str(int(zq_time_ary[1]) - 2)
+            zq_time = "-".join(zq_time_ary)
+            
+            QS_900_Set_Date(zq_date, zq_time)
+            
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPREI")
 
-            #VERIFY FLAG IS COMPL
+
+            #WAIT QUARTER
+            zq_wait = QS_910_Wait_Quarter()
+            dprint("\tWaiting {} sec. for quarter.".format(zq_wait),2)
+            time.sleep(zq_wait)
+
+
+            #VERIFY FLAG IS LONG FOR 15-MIN
             zq_res = True
             zq_str = ""
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
+            #
+            #VERIFY FLAG IS LONG FOR 24-HOUR
+            #
+            #SKIPPED BECAUSE THIS TEST WILL WASTE TIME! MORE THAN 3 DAYS TO CHECK 15 COUNTERS FLAGS!
+            #
+            '''
+            time.sleep(86400)
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC-BI,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-            
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "15-MIN")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "1-DAY")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "15-MIN")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "1-DAY")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "BIDIR", "1-DAY")
-            
-            time.sleep(5)
-
-            zq_res = QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1)
-            if zq_res == 0:
-                dprint("OK\tAll PM counter for {} are 0.".format(zq_vc4_idx1),2)
-                self.add_success(NE1, "PM Counter Reading","0.0", "All PM counter {} are 0.".format(zq_vc4_idx1))
-            else:
-                self.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "Some PM counter for {} are not 0.".format(zq_vc4_idx1))
-                dprint("KO\tSome PM counter for {} are not 0.".format(zq_vc4_idx1),2)
-
-            #VERIFY FLAG IS ADJ
-            zq_res = True
-            zq_str = ""
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
 
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC-NE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC-FE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC-NE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC-FE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC-NE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC-FE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC-BI,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:UAS-HOVC-BI,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
-            
+            '''
             
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "DISABLED", "1-DAY")
-            
+
 
         QS_060_Delete_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
         
@@ -1351,7 +1152,7 @@ class Test(TestCase):
 
         
         print("\n******************************************************************************")
-        print("\n       VERIFY VALIDITY FLAG ADJ - 2xMVC4 in third block                       ")
+        print("\n       VERIFY VALIDITY FLAG LONG - 2xMVC4 in third block                      ")
         print("\n******************************************************************************")
 
         #Delete ALL PM data for 15min/24hour
@@ -1377,7 +1178,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "03-00-00")
+        QS_900_Set_Date("16-05-05", "23-55-00")
         
         zq_vc4_ch1="{}.1.1.1".format(str(E_VC4_3_1 % E_BLOCK_SIZE))
         zq_vc4_ch2="{}.1.1.1".format(str(E_VC4_3_2 % E_BLOCK_SIZE))
@@ -1391,8 +1192,6 @@ class Test(TestCase):
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "ON", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "ON", "1-DAY")
             
-            #WAIT FIRST QUARTER WHITHOUT 
-            time.sleep(16*60)
 
             if QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1) == 0:
                 dprint("OK\tAll PM counters are = 0",2)
@@ -1401,276 +1200,164 @@ class Test(TestCase):
                 dprint("KO\tSome PM counters are NOT = 0",2)
                 self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0")
 
+            zq_time = QS_910_Wait_Quarter()
+            time.sleep(zq_time)
+
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "NEND","BOTH","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "FEND","BOTH","RCV","HPREI")
+            
+            zq_date_time=QS_920_Get_Date_Time()
+            zq_date = zq_date_time[0]
+            zq_time = zq_date_time[1]
+            zq_time_ary = zq_time.split(":")
+            zq_time_ary[1] = str(int(zq_time_ary[1]) - 2)
+            zq_time = "-".join(zq_time_ary)
+            
+            QS_900_Set_Date(zq_date, zq_time)
+            
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPREI")
 
-            #VERIFY FLAG IS COMPL
+
+            #WAIT QUARTER
+            zq_wait = QS_910_Wait_Quarter()
+            dprint("\tWaiting {} sec. for quarter.".format(zq_wait),2)
+            time.sleep(zq_wait)
+
+
+            #VERIFY FLAG IS LONG FOR 15-MIN
             zq_res = True
             zq_str = ""
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
+            #
+            #VERIFY FLAG IS LONG FOR 24-HOUR
+            #
+            #SKIPPED BECAUSE THIS TEST WILL WASTE TIME! MORE THAN 3 DAYS TO CHECK 15 COUNTERS FLAGS!
+            #
+            '''
+            time.sleep(86400)
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC,,COMPL,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:BBE-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:ES-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC-NE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:SES-HOVC-FE,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "COMPL", 
-                                                  "{},VC4:UAS-HOVC-BI,,COMPL,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-            
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "15-MIN")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "NEND", "1-DAY")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "15-MIN")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "FEND", "1-DAY")
-            QS_110_Init_PM_Counter(self, zq_vc4_idx1, "BIDIR", "1-DAY")
-            
-            time.sleep(5)
-
-            zq_res = QS_120_Verify_PM_Counter_Zero(self, zq_vc4_idx1)
-            if zq_res == 0:
-                dprint("OK\tAll PM counter for {} are 0.".format(zq_vc4_idx1),2)
-                self.add_success(NE1, "PM Counter Reading","0.0", "All PM counter {} are 0.".format(zq_vc4_idx1))
-            else:
-                self.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "Some PM counter for {} are not 0.".format(zq_vc4_idx1))
-                dprint("KO\tSome PM counter for {} are not 0.".format(zq_vc4_idx1),2)
-
-            #VERIFY FLAG IS ADJ
-            zq_res = True
-            zq_str = ""
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,FEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,NEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
-            zq_res = zq_res and zq_temp[0]
-            zq_str = zq_str + zq_temp[1]
-
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC,,ADJ,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:UAS-HOVC,,LONG,FEND,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
 
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC-NE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:BBE-HOVC-FE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:BBE-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC-NE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:ES-HOVC-FE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:ES-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC-NE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC-NE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:SES-HOVC-FE,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:SES-HOVC-FE,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "BOTH", "ADJ", 
-                                                  "{},VC4:UAS-HOVC-BI,,ADJ,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "LONG", 
+                                                  "{},VC4:UAS-HOVC-BI,,LONG,BIDIR,RCV,1-DAY,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
-            
+            '''
             
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "NEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "FEND", "DISABLED", "BOTH")
             QS_090_Set_PM_Mode(self, zq_vc4_idx1, "BIDIR", "DISABLED", "1-DAY")
-            
+
 
         QS_060_Delete_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
         
