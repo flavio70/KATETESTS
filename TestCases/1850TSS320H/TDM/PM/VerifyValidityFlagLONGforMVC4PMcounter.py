@@ -9,8 +9,8 @@ TestCase template for K@TE test developers
 :field Topology: 5
 :field Dependency: NA
 :field Lab: SVT
-:field TPS: PM__5-5-17-1
-:field TPS: PM__5-5-17-2
+:field TPS: PM__5-5-23-1
+:field TPS: PM__5-5-23-2
 :field RunSections: 11111
 :field Author: tosima
 
