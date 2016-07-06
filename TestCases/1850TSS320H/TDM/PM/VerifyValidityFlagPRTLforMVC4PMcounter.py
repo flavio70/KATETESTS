@@ -674,10 +674,14 @@ class Test(TestCase):
                     if (zq_slot[3] in E_SLOT):
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}::::PROVISIONEDTYPE=1P10GSOE;".format(''.join(zq_aid_list[zq_i]).replace('MDL','10GSO')))
                         NE1.tl1.do_until("RTRV-EQPT::{};".format(''.join(zq_aid_list[zq_i]).replace('MDL','10GSO')),zq_filter)
+                        print('*****************************************')
                         print('Board Equipped: {}'.format(''.join(zq_aid_list[zq_i]).replace('MDL','10GSO')))
+                        print('*****************************************')
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-1::::PROVISIONEDTYPE=XI-641;".format(''.join(zq_aid_list[zq_i]).replace('MDL','XFP')))
                         zq_board_to_remove.append(''.join(zq_aid_list[zq_i]).replace('MDL','10GSO'))
+                        print('*****************************************')
                         print('\tXFP equipped: {}-1'.format(''.join(zq_aid_list[zq_i]).replace('MDL','XFP')))
+                        print('*****************************************')
                         zq_num += 1
                 zq_i += 1
 
