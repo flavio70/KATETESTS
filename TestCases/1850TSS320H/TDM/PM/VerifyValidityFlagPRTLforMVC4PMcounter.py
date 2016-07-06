@@ -1229,7 +1229,7 @@ class Test(TestCase):
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "ADJ", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "PRTL", 
                                                   "{},VC4:UAS-HOVC,,PRTL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
@@ -1353,7 +1353,7 @@ class Test(TestCase):
 
         
         print("\n******************************************************************************")
-        print("\n       VERIFY VALIDITY FLAG ADJ - 2xMVC4 in third block                       ")
+        print("\n       VERIFY VALIDITY FLAG PRTL - 2xMVC4 in third block                      ")
         print("\n******************************************************************************")
 
         #Delete ALL PM data for 15min/24hour
@@ -1552,7 +1552,7 @@ class Test(TestCase):
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
 
-            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "ADJ", 
+            zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "15-MIN", "PRTL", 
                                                   "{},VC4:UAS-HOVC,,PRTL,NEND,RCV,15-MIN,,,".format(zq_vc4_idx1))
             zq_res = zq_res and zq_temp[0]
             zq_str = zq_str + zq_temp[1]
