@@ -671,6 +671,9 @@ class Test(TestCase):
         print("\n******************************************************************************")
         print("\n   CHECK 2xMVC4 in FIRST BLOCK                                                ")
         print("\n******************************************************************************")
+        #Delete ALL PM data for 15min/24hour
+        NE1.flc_send_cmd("rm /pureNeApp/FLC/DB/PM/rack-01/subrack-01/tdm/15m/*")
+        NE1.flc_send_cmd("rm /pureNeApp/FLC/DB/PM/rack-01/subrack-01/tdm/24h/*")
         '''
         CHECK FIRST 128 BLOCK of MVC4 
         '''
@@ -807,6 +810,9 @@ class Test(TestCase):
         print("\n******************************************************************************")
         print("\n   CHECK 2xMVC4 in SECOND BLOCK                                               ")
         print("\n******************************************************************************")
+        #Delete ALL PM data for 15min/24hour
+        NE1.flc_send_cmd("rm /pureNeApp/FLC/DB/PM/rack-01/subrack-01/tdm/15m/*")
+        NE1.flc_send_cmd("rm /pureNeApp/FLC/DB/PM/rack-01/subrack-01/tdm/24h/*")
 
         zq_xc_list=list()
         zq_xc_list.append("EMPTY,EMPTY")
@@ -924,6 +930,9 @@ class Test(TestCase):
         print("\n******************************************************************************")
         print("\n   CHECK 2xMVC4 in THIRD BLOCK                                                ")
         print("\n******************************************************************************")
+        #Delete ALL PM data for 15min/24hour
+        NE1.flc_send_cmd("rm /pureNeApp/FLC/DB/PM/rack-01/subrack-01/tdm/15m/*")
+        NE1.flc_send_cmd("rm /pureNeApp/FLC/DB/PM/rack-01/subrack-01/tdm/24h/*")
 
         zq_xc_list=list()
         zq_xc_list.append("EMPTY,EMPTY")
