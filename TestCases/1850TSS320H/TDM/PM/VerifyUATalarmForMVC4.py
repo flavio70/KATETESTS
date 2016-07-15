@@ -360,8 +360,12 @@ def QS_100_Check_UAT(zq_run,
                     dprint("OK\tAlarm [{}] found for {} ".format(zq_alm,zq_vc4_idx1),2)
                     zq_run.add_success(NE1, "ALARM Reporting","0.0", "Alarm [{}] found for {}.".format(zq_alm, zq_vc4_idx1))
                 else:
-                    dprint("KO\tAlarm mismatch [{}] for {} ".format(zq_alm,zq_vc4_idx1),2)
-                    zq_run.add_failure(NE1, "ALARM Reporting", "0.0", "ALARM Reporting", "Alarm mismatch [{}] for {}".format(zq_alm,zq_vc4_idx1))
+                    if (zq_locn == 'BIDIR') and (zq_alm_ary[5] == 'FEND'):
+                        dprint("OK\tAlarm [{}] found for {} ".format(zq_alm,zq_vc4_idx1),2)
+                        zq_run.add_success(NE1, "ALARM Reporting","0.0", "Alarm [{}] found for {}.".format(zq_alm, zq_vc4_idx1))
+                    else:    
+                        dprint("KO\tAlarm mismatch [{}] for {} ".format(zq_alm,zq_vc4_idx1),2)
+                        zq_run.add_failure(NE1, "ALARM Reporting", "0.0", "ALARM Reporting", "Alarm mismatch [{}] for {}".format(zq_alm,zq_vc4_idx1))
             else:
                 dprint("KO\tEVENT mismatch [{}] for {} ".format(zq_elem.get_eve_type(),zq_vc4_idx1),2)
                 zq_run.add_failure(NE1, "EVENT Reporting", "0.0", "EVENT Reporting", "EVENT mismatch [{}] for {}".format(zq_elem.get_eve_type(),zq_vc4_idx1))
@@ -444,8 +448,12 @@ def QS_100_Check_UAT(zq_run,
                     dprint("OK\tAlarm [{}] cleared for {} ".format(zq_alm,zq_vc4_idx1),2)
                     zq_run.add_success(NE1, "ALARM Reporting","0.0", "Alarm [{}] cleared for {}.".format(zq_alm, zq_vc4_idx1))
                 else:
-                    dprint("KO\tAlarm clear mismatch [{}] for {} ".format(zq_alm,zq_vc4_idx1),2)
-                    zq_run.add_failure(NE1, "ALARM Reporting", "0.0", "ALARM Reporting", "Alarm clear mismatch [{}] for {}".format(zq_alm,zq_vc4_idx1))
+                    if (zq_locn == 'BIDIR') and (zq_alm_ary[5] == 'FEND'):
+                        dprint("OK\tAlarm [{}] cleared for {} ".format(zq_alm,zq_vc4_idx1),2)
+                        zq_run.add_success(NE1, "ALARM Reporting","0.0", "Alarm [{}] cleared for {}.".format(zq_alm, zq_vc4_idx1))
+                    else:
+                        dprint("KO\tAlarm clear mismatch [{}] for {} ".format(zq_alm,zq_vc4_idx1),2)
+                        zq_run.add_failure(NE1, "ALARM Reporting", "0.0", "ALARM Reporting", "Alarm clear mismatch [{}] for {}".format(zq_alm,zq_vc4_idx1))
             else:
                 dprint("KO\tEVENT mismatch [{}] for {} ".format(zq_elem.get_eve_type(),zq_vc4_idx1),2)
                 zq_run.add_failure(NE1, "EVENT Reporting", "0.0", "EVENT Reporting", "EVENT mismatch [{}] for {}".format(zq_elem.get_eve_type(),zq_vc4_idx1))
@@ -936,7 +944,6 @@ class Test(TestCase):
             print('Board Deleted: {}'.format(''.join(zq_board_to_remove[zq_i]).replace('10GSO','MDL')))
             print("**************************************")
 
-        zq_tl1_res=NE1.tl1.do("DLT-TH-PROF::THPVC4-2:;")
         
         self.stop_tps_block(NE1.id,"PM","5-5-32-1")
         self.stop_tps_block(NE1.id,"PM","5-5-32-2")
