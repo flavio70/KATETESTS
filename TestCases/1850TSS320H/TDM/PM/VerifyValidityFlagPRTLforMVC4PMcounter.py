@@ -4,12 +4,14 @@ TestCase template for K@TE test developers
 
 :field Description: This test provides a method to verify the behavior of the validity  
 :field Description: flag for the PM counters of MVC4 facilities, when counters are reset.
-:field Description: The PRTL flag for first history entry is being checked.
+:field Description: The COMPL flag for current data and PRTL flag for first history entry are being checked.
 :field Topology: 5
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-17-1
 :field TPS: PM__5-5-17-2
+:field TPS: PM__5-5-15-1
+:field TPS: PM__5-5-15-2
 :field RunSections: 11111
 :field Author: tosima
 
@@ -606,6 +608,8 @@ class Test(TestCase):
         
         self.start_tps_block(NE1.id,"PM","5-5-17-1")
         self.start_tps_block(NE1.id,"PM","5-5-17-2")
+        self.start_tps_block(NE1.id,"PM","5-5-15-1")
+        self.start_tps_block(NE1.id,"PM","5-5-15-2")
 
         E_LO_MTX = "MXH60GLO"
         E_HO_TI = 'X4F4E5420484F2D5452414345202020' #'ONT HO-TRACE   '
@@ -1705,6 +1709,8 @@ class Test(TestCase):
 
         self.stop_tps_block(NE1.id,"PM","5-5-17-1")
         self.stop_tps_block(NE1.id,"PM","5-5-17-2")
+        self.stop_tps_block(NE1.id,"PM","5-5-15-1")
+        self.stop_tps_block(NE1.id,"PM","5-5-15-2")
 
 
     def test_cleanup(self):
