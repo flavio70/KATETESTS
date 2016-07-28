@@ -282,8 +282,8 @@ class Test(TestCase):
                 dprint("OK\tMVC4 in CONSTATE=USEDBYHOCC is correct",2)
                 self.add_success(NE1, "MVC4 CONSTATE CHECK","0.0", "MVC4 in CONSTATE=USEDBYHOCC is correct")
             else:
-                dprint("KO\tMVC4 in CONSTATE=USEDBYHOCC exp: {} ".format(E_HO_CONN-1,2))
-                dprint("\tMVC4 in CONSTATE=USEDBYHOCC act: {} ".format(zq_usedbyhocc_num,2))
+                dprint("KO\tMVC4 in CONSTATE=USEDBYHOCC exp: {} ".format(E_HO_CONN-1),2)
+                dprint("\tMVC4 in CONSTATE=USEDBYHOCC act: {} ".format(zq_usedbyhocc_num),2)
                 self.add_failure(NE1, "MVC4 CONSTATE CHECK","0.0", "MVC4 in CONSTATE=USEDBYHOCC is wrong","MVC4 in CONSTATE=USEDBYHOCC is wrong")
                 
             '''
