@@ -137,18 +137,27 @@ class Test(TestCase):
         '''
         Board equipment if not yet!
         '''
-        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot), policy='DENY')
+        zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
-        dprint(NE1.tl1.get_last_outcome(),1)
         zq_cmd=zq_msg.get_cmd_status()
-        if zq_cmd == (True,'DENY'):
-            print("Board already equipped")
-        else:
-            zq_filter=TL1check()
-            zq_filter.add_pst("IS")
-            zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-            NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
-
+        if zq_cmd == (True,'COMPLD'):
+            zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
+            if zq_attr_list1 is not None:
+                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                    print("Board already equipped")
+                else:
+                    zq_filter=TL1check()
+                    zq_filter.add_pst("IS")
+                    zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                    NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+            else:
+                if zq_attr_list2 is not None:
+                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                        zq_filter=TL1check()
+                        zq_filter.add_pst("IS")
+                        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                        NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
 
         '''
         Find 5 free slots and equip 5 x 1P10GSO
@@ -346,6 +355,7 @@ class Test(TestCase):
                     
         self.stop_tps_block(NE1.id,"FM", "5-2-4-1")
         
+        
         self.start_tps_block(NE1.id,"FM", "5-2-5-1")
         
                 
@@ -486,7 +496,7 @@ class Test(TestCase):
                 dprint("\nKO\tCross-connection deletion failed {}".format(zq_xc_list[zq_i]),2)
         
 
-
+        
         '''
         Delete equipped 4 x 1P10GSO
         '''

@@ -267,7 +267,26 @@ class Test(TestCase):
         '''
         '''
         
-        self.start_tps_block(NE1.id,"PM", "5-5-3-1")
+        self.start_tps_block(NE1.id,"PM", "5-5-3-6")
+        self.stop_tps_block(NE1.id,"PM","5-5-3-6")
+
+        self.start_tps_block(NE1.id,"PM", "5-5-3-7")
+        self.stop_tps_block(NE1.id,"PM","5-5-3-7")
+
+        self.start_tps_block(NE1.id,"PM", "5-5-3-8")
+        self.stop_tps_block(NE1.id,"PM","5-5-3-8")
+
+        self.start_tps_block(NE1.id,"PM", "5-5-3-9")
+        self.stop_tps_block(NE1.id,"PM","5-5-3-9")
+
+        self.start_tps_block(NE1.id,"PM", "5-5-3-10")
+        self.stop_tps_block(NE1.id,"PM","5-5-3-10")
+
+        self.start_tps_block(NE1.id,"PM", "5-5-4-3")
+        self.stop_tps_block(NE1.id,"PM","5-5-4-3")
+
+        self.start_tps_block(NE1.id,"PM", "5-5-4-4")
+        self.stop_tps_block(NE1.id,"PM","5-5-4-4")
 
         zq_mtxlo_slot=NE1_M1
 

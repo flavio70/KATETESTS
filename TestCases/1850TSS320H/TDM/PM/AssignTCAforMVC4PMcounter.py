@@ -808,7 +808,7 @@ class Test(TestCase):
                     if zq_msg.get_cmd_response_size() == 0:
                         zq_tca_ttc = zq_i*10//60
                         dprint("\tTCA Alarms cleared after {} min".format(zq_tca_ttc),2)
-                        if zq_tca_ttc <= 15:
+                        if zq_tca_ttc <= 30:
                             dprint("OK\tTCA Alarms cleared after TCA profile change",2)
                             self.add_success(NE1, "TCA Alarms","0.0", "TCA Alarms cleared after TCA profile change")
                             zq_tca_cleared = True
@@ -966,7 +966,7 @@ class Test(TestCase):
                     if zq_msg.get_cmd_response_size() == 0:
                         zq_tca_ttc = zq_i*10//60
                         dprint("\tTCA Alarms cleared after {} min".format(zq_tca_ttc),2)
-                        if zq_tca_ttc <= 15:
+                        if zq_tca_ttc <= 30:
                             dprint("OK\tTCA Alarms cleared after TCA profile change",2)
                             self.add_success(NE1, "TCA Alarms","0.0", "TCA Alarms cleared after TCA profile change")
                             zq_tca_cleared = True
@@ -1169,7 +1169,7 @@ class Test(TestCase):
                     if zq_msg.get_cmd_response_size() == 0:
                         zq_tca_ttc = zq_i*10//60
                         dprint("\tTCA Alarms cleared after {} min".format(zq_tca_ttc),2)
-                        if zq_tca_ttc <= 15:
+                        if zq_tca_ttc <= 30:
                             dprint("OK\tTCA Alarms cleared after TCA profile change",2)
                             self.add_success(NE1, "TCA Alarms","0.0", "TCA Alarms cleared after TCA profile change")
                             zq_tca_cleared = True
@@ -1327,7 +1327,7 @@ class Test(TestCase):
                     if zq_msg.get_cmd_response_size() == 0:
                         zq_tca_ttc = zq_i*10//60
                         dprint("\tTCA Alarms cleared after {} min".format(zq_tca_ttc),2)
-                        if zq_tca_ttc <= 15:
+                        if zq_tca_ttc <= 30:
                             dprint("OK\tTCA Alarms cleared after TCA profile change",2)
                             self.add_success(NE1, "TCA Alarms","0.0", "TCA Alarms cleared after TCA profile change")
                             zq_tca_cleared = True
@@ -1533,7 +1533,7 @@ class Test(TestCase):
                     if zq_msg.get_cmd_response_size() == 0:
                         zq_tca_ttc = zq_i*10//60
                         dprint("\tTCA Alarms cleared after {} min".format(zq_tca_ttc),2)
-                        if zq_tca_ttc <= 15:
+                        if zq_tca_ttc <= 30:
                             dprint("OK\tTCA Alarms cleared after TCA profile change",2)
                             self.add_success(NE1, "TCA Alarms","0.0", "TCA Alarms cleared after TCA profile change")
                             zq_tca_cleared = True
@@ -1691,7 +1691,7 @@ class Test(TestCase):
                     if zq_msg.get_cmd_response_size() == 0:
                         zq_tca_ttc = zq_i*10//60
                         dprint("\tTCA Alarms cleared after {} min".format(zq_tca_ttc),2)
-                        if zq_tca_ttc <= 15:
+                        if zq_tca_ttc <= 30:
                             dprint("OK\tTCA Alarms cleared after TCA profile change",2)
                             self.add_success(NE1, "TCA Alarms","0.0", "TCA Alarms cleared after TCA profile change")
                             zq_tca_cleared = True
