@@ -21,8 +21,20 @@ from katelibs.instrumentONT     import InstrumentONT
 from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import *
 import time
+from inspect import currentframe
 
 E_LO_MTX = "MXH60GLO"
+
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
+
 
 def Q010_Remove_Board(zq_slot):
     zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_slot))
@@ -40,6 +52,7 @@ def Q010_Remove_Board(zq_slot):
             zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
             dprint("\t. . . waiting for removing . . .{}".format(zq_pst),2)
         dprint("OK\tBoard {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
+        self.add_success(NE1, "TL1 command","0.0", "Board {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst))
     return
 
 def Q020_Delete_Board(zq_slot):
@@ -62,6 +75,7 @@ def Q020_Delete_Board(zq_slot):
                 #print("\t. . . waiting for deleting . . .{}".format(zq_pst))
             dprint(NE1.tl1.get_last_outcome(),1)
         dprint("OK\tBoard {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
+        self.add_success(NE1, "TL1 command","0.0", "Board {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst))
     return
 
 def dprint(zq_str,zq_level):
@@ -202,20 +216,24 @@ class Test(TestCase):
             zq_msg=TL1message(NE1.tl1.get_last_outcome())
             zq_sst=zq_msg.get_cmd_sst("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i))
             if "SDEE" in zq_sst:
-               dprint('KO\tMVC4-{}-{} sst wrongly contains SDEE'.format(zq_mtxlo_slot,zq_i),2) 
+                dprint('KO\tMVC4-{}-{} sst wrongly contains SDEE'.format(zq_mtxlo_slot,zq_i),2) 
+                self.add_failure(NE1, "TL1 command","0.0", "MVC4-{}-{} sst wrongly contains SDEE".format(zq_mtxlo_slot,zq_i),
+                                    "MVC4-{}-{} sst wrongly contains SDEE {}".format(zq_mtxlo_slot,zq_i,QS_000_Print_Line_Function()))
             else: 
-               dprint('OK\tMVC4-{}-{} sst correctly not contains SDEE'.format(zq_mtxlo_slot,zq_i),2) 
+                dprint("OK\tMVC4-{}-{} sst correctly not contains SDEE".format(zq_mtxlo_slot,zq_i),2) 
+                self.add_success(NE1, "TL1 command","0.0", "MVC4-{}-{} sst correctly not contains SDEE".format(zq_mtxlo_slot,zq_i))
             
             for zq_j in range(1,4):
                 zq_tl1_res=NE1.tl1.do("RTRV-TU3::MVC4TU3-{}-{}-{};".format(zq_mtxlo_slot,zq_i,zq_j))
                 zq_msg=TL1message(NE1.tl1.get_last_outcome())
                 zq_sst=zq_msg.get_cmd_sst("MVC4TU3-{}-{}-{}".format(zq_mtxlo_slot,zq_i,zq_j))
                 if "SDEE" in zq_sst:
-                   dprint('KO\t\tMVC4TU3-{}-{}-{} SST wrongly contains SDEE'.format(zq_mtxlo_slot,zq_i,zq_j),2) 
-                   self.add_failure(NE1, "TL1 command","0.0", "Retrieving MVC4TU3-{}-{}-{}: {}\n".format(zq_mtxlo_slot,zq_i,zq_j),"SST wrong")
+                    dprint('KO\t\tMVC4TU3-{}-{}-{} SST wrongly contains SDEE'.format(zq_mtxlo_slot,zq_i,zq_j),2) 
+                    self.add_failure(NE1, "TL1 command","0.0", "Retrieving MVC4TU3-{}-{}-{}: {}\n".format(zq_mtxlo_slot,zq_i,zq_j),
+                                    "SST wrong "+ QS_000_Print_Line_Function())
                 else: 
-                   dprint('OK\t\tMVC4TU3-{}-{}-{} SST correctly not contains SDEE'.format(zq_mtxlo_slot,zq_i,zq_j),2) 
-                   self.add_success(NE1, "TL1 command","0.0", "Retrieving MVC4TU3-{}-{}-{}: SST correct\n".format(zq_mtxlo_slot,zq_i,zq_j))
+                    dprint('OK\t\tMVC4TU3-{}-{}-{} SST correctly not contains SDEE'.format(zq_mtxlo_slot,zq_i,zq_j),2) 
+                    self.add_success(NE1, "TL1 command","0.0", "Retrieving MVC4TU3-{}-{}-{}: SST correct\n".format(zq_mtxlo_slot,zq_i,zq_j))
                     
         '''
         Create 64xHI order cross-connection from STM64AU4-1-1-x-y-n to LOPOOL
@@ -241,6 +259,7 @@ class Test(TestCase):
             if zq_cmd == (True,'COMPLD'):
                 zq_xc_list.append(''.join(zq_msg.get_cmd_aid_list()))
                 dprint("\nOK\tCross-connection creation successfull {}".format(zq_xc_list[zq_i]),2)
+                self.add_success(NE1, "TL1 command","0.0", "Cross-connection creation successfull {}".format(zq_xc_list[zq_i]))
 
                 '''
                 Check MVC4 SST contains SDEE
@@ -251,9 +270,12 @@ class Test(TestCase):
                 zq_msg=TL1message(NE1.tl1.get_last_outcome())
                 zq_sst=zq_msg.get_cmd_sst("{}".format(zq_mvc4_str))
                 if "SDEE" in zq_sst:
-                   dprint('OK\t\t{} SST correctly contains SDEE'.format(zq_mvc4_str),2) 
+                    dprint("OK\t\t{} SST correctly contains SDEE".format(zq_mvc4_str),2) 
+                    self.add_success(NE1, "TL1 command","0.0", "{} SST correctly contains SDEE".format(zq_mvc4_str))
                 else: 
-                   dprint('KO\t\t{} SST wrongly does not contains SDEE'.format(zq_mvc4_str),2) 
+                    dprint('KO\t\t{} SST wrongly does not contains SDEE'.format(zq_mvc4_str),2) 
+                    self.add_failure(NE1, "TL1 command","0.0", "{} SST wrongly does not contains SDEE".format(zq_mvc4_str),
+                                         "{} SST wrongly does not contains SDEE {}".format(zq_mvc4_str, QS_000_Print_Line_Function()))
                 
                 '''
                 Check MVC4TU3 SST doesn't contain SDEE
@@ -265,16 +287,23 @@ class Test(TestCase):
                     zq_msg=TL1message(NE1.tl1.get_last_outcome())
                     zq_sst=zq_msg.get_cmd_sst("{}-{}".format(zq_tu3_str,zq_k))
                     if "SDEE" in zq_sst:
-                       dprint('KO\t\t\t{}-{} SST wrongly contains SDEE'.format(zq_tu3_str,zq_k),2) 
+                        dprint('KO\t\t\t{}-{} SST wrongly contains SDEE'.format(zq_tu3_str,zq_k),2) 
+                        self.add_failure(NE1, "TL1 command","0.0", "{}-{} SST wrongly contains SDEE".format(zq_tu3_str,zq_k),
+	                                     "{}-{} SST wrongly contains SDEE {}".format(zq_tu3_str,zq_k,QS_000_Print_Line_Function()))
                     else: 
-                       dprint('OK\t\t\t{}-{} SST correctly does not contains SDEE'.format(zq_tu3_str,zq_k),2) 
+                        dprint("OK\t\t\t{}-{} SST correctly does not contains SDEE".format(zq_tu3_str,zq_k),2) 
+                        self.add_success(NE1, "TL1 command","0.0", "{}-{} SST correctly does not contains SDEE".format(zq_tu3_str,zq_k))
                     
 
             else:
                 if zq_cmd[1]== 'COMPLD':    
                     dprint("\nKO\tCross-connection creation failed {}\n".format(zq_xc_list[zq_i]),2)
+                    self.add_failure(NE1, "TL1 command","0.0", "Cross-connection creation failed {}".format(zq_xc_list[zq_i]),
+                                          "Cross-connection creation failed {} {}".format(zq_xc_list[zq_i]),QS_000_Print_Line_Function())
                 else:
                     dprint("\nKO\tTL1 Cross-connection command DENY\n",2)
+                    self.add_failure(NE1, "TL1 command","0.0", "TL1 Cross-connection command DENY",
+                                          "TL1 Cross-connection command DENY {}".format(QS_000_Print_Line_Function()))
                     
         
         '''
@@ -287,8 +316,11 @@ class Test(TestCase):
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'DENY'):
             dprint("\nOK\tEquipment in SDEE status correctly not be removed",2)
+            self.add_success(NE1, "TL1 command","0.0", "Equipment in SDEE status correctly not be removed")
         else:
             dprint("\nKO\tEquipment in SDEE status wrongly removed",2)
+            self.add_failure(NE1, "TL1 command","0.0", "Equipment in SDEE status wrongly removed",
+                                  "Equipment in SDEE status wrongly removed {}".format(QS_000_Print_Line_Function()))
 
         
         
@@ -306,12 +338,14 @@ class Test(TestCase):
                     zq_cmd=zq_msg.get_cmd_status()
                     if zq_cmd == (True,'COMPLD'):
                         dprint("\nOK\tCross-connection successfully created {}-{}".format(zq_tu3_idx,zq_j),2)
+                        self.add_success(NE1, "TL1 command","0.0", "Cross-connection successfully created {}-{}".format(zq_tu3_idx,zq_j))
                         zq_tl1_res=NE1.tl1.do("RTRV-TU3::{}-{};".format(zq_tu3_idx,zq_j))
                         zq_msg=TL1message(NE1.tl1.get_last_outcome())
                         dprint(NE1.tl1.get_last_outcome(),1)
                         zq_sst=zq_msg.get_cmd_sst("{}-{}".format(zq_tu3_idx,zq_j))
                         if 'SDEE' in zq_sst:
                             dprint("OK\t\t{}-{} SST correctly contains SDEE".format(zq_tu3_idx,zq_j),2)
+                            self.add_success(NE1, "TL1 command","0.0", "{}-{} SST correctly contains SDEE".format(zq_tu3_idx,zq_j))
     
                             
                             '''
@@ -324,11 +358,16 @@ class Test(TestCase):
                             zq_cmd=zq_msg.get_cmd_status()
                             if zq_cmd == (True,'DENY'):
                                 dprint("\nOK\tEquipment SST in SDEE status correctly TUn structure cannot be modified",2)
+                                self.add_success(NE1, "TL1 command","0.0", "Equipment SST in SDEE status correctly TUn structure cannot be modified")
                             else:
                                 dprint("\nKO\tEquipment SST in SDEE status wrongly TUn structure can be modified",2)
+                                self.add_failure(NE1, "TL1 command","0.0", "Equipment SST in SDEE status wrongly TUn structure can be modified",
+                                                      "Equipment SST in SDEE status wrongly TUn structure can be modified {}".format(QS_000_Print_Line_Function()))
                     
                         else:
                             dprint("KO\t\t{}-{} SST wrongly does not contain SDEE".format(zq_tu3_idx,zq_j),2)
+                            self.add_failure(NE1, "TL1 command","0.0", "{}-{} SST wrongly does not contain SDEE".format(zq_tu3_idx,zq_j),
+                                                  "{}-{} SST wrongly does not contain SDEE {}".format(zq_tu3_idx,zq_j,QS_000_Print_Line_Function()))
                             
                         '''
                         Delete LOVC3 cross-connection
@@ -339,18 +378,24 @@ class Test(TestCase):
                         zq_cmd=zq_msg.get_cmd_status()
                         if zq_cmd == (True,'COMPLD'):
                             dprint("\nOK\tCross-connection successfully deleted {}-{}".format(zq_tu3_idx,zq_j),2)
+                            self.add_success(NE1, "TL1 command","0.0", "Cross-connection successfully deleted {}-{}".format(zq_tu3_idx,zq_j))
                             zq_tl1_res=NE1.tl1.do("RTRV-TU3::{}-{};".format(zq_tu3_idx,zq_j))
                             zq_msg=TL1message(NE1.tl1.get_last_outcome())
                             dprint(NE1.tl1.get_last_outcome(),1)
                             zq_sst=zq_msg.get_cmd_sst("{}-{}".format(zq_tu3_idx,zq_j))
                             if 'SDEE' in zq_sst:
                                 dprint("KO\t\t{}-{} SST wrongly contains SDEE".format(zq_tu3_idx,zq_j),2)
+                                self.add_failure(NE1, "TL1 command","0.0", "{}-{} SST wrongly contains SDEE".format(zq_tu3_idx,zq_j),
+                                                      "{}-{} SST wrongly contains SDEE {}".format(zq_tu3_idx,zq_j,QS_000_Print_Line_Function()))
                             else:
                                 dprint("OK\t\t{}-{} SST correctly does not contain SDEE".format(zq_tu3_idx,zq_j),2)
+                                self.add_success(NE1, "TL1 command","0.0", "{}-{} SST correctly does not contain SDEE".format(zq_tu3_idx,zq_j))
                             
     
                     else:
                         dprint("\nKO\tCross-connection creation failed {}-{}\n".format(zq_tu3_idx,zq_j),2)
+                        self.add_failure(NE1, "TL1 command","0.0", "Cross-connection creation failed {}-{}".format(zq_tu3_idx,zq_j),
+                                              "Cross-connection creation failed {}-{} {}".format(zq_tu3_idx,zq_j,QS_000_Print_Line_Function()))
                     
                     
         self.stop_tps_block(NE1.id,"FM", "5-2-4-1")
@@ -386,6 +431,7 @@ class Test(TestCase):
                 zq_struct=zq_msg.get_cmd_attr_value("{}".format(zq_mvc4_str),'LOSTRUCT' )
                 if (zq_cmd[1]=='COMPLD' and zq_struct=='63xTU12'):
                     dprint("\nOK\t{} structure changed to 63xTU12".format(zq_mvc4_str),2)
+                    self.add_success(NE1, "TL1 command","0.0", "{} structure changed to 63xTU12".format(zq_mvc4_str))
                     '''
                     Create/Delete 64x63LOVC12 cross-connections and verify MVC4TU12 SST contains/not contains SDEE
                     '''            
@@ -400,6 +446,7 @@ class Test(TestCase):
                                 zq_cmd=zq_msg.get_cmd_status()
                                 if zq_cmd == (True,'COMPLD'):
                                     dprint("\nOK\tCross-connection successfully created {}".format(zq_tu12_str),2)
+                                    self.add_success(NE1, "TL1 command","0.0", "Cross-connection successfully created {}".format(zq_tu12_str))
 
                                     zq_tl1_res=NE1.tl1.do("RTRV-TU12::{};".format(zq_tu12_str))
                                     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -407,6 +454,7 @@ class Test(TestCase):
                                     zq_sst=zq_msg.get_cmd_sst("{}".format(zq_tu12_str))
                                     if 'SDEE' in zq_sst:
                                         dprint("OK\t\t{} SST correctly contains SDEE".format(zq_tu12_str),2)
+                                        self.add_success(NE1, "TL1 command","0.0", "{} SST correctly contains SDEE".format(zq_tu12_str))
                 
                                         
                                         '''
@@ -419,11 +467,16 @@ class Test(TestCase):
                                         zq_cmd=zq_msg.get_cmd_status()
                                         if zq_cmd == (True,'DENY'):
                                             dprint("\nOK\tEquipment SST in SDEE status correctly TUn structure cannot be modified",2)
+                                            self.add_success(NE1, "TL1 command","0.0", "Equipment SST in SDEE status correctly TUn structure cannot be modified")
                                         else:
                                             dprint("\nKO\tEquipment SST in SDEE status wrongly TUn structure can be modified",2)
+                                            self.add_failure(NE1, "TL1 command","0.0", "Equipment SST in SDEE status wrongly TUn structure can be modified",
+                                                                  "Equipment SST in SDEE status wrongly TUn structure can be modified {} "+ QS_000_Print_Line_Function())
                                 
                                     else:
                                         dprint("KO\t\t{} SST wrongly does not contain SDEE".format(zq_tu12_str),2)
+                                        self.add_failure(NE1, "TL1 command","0.0", "{} SST wrongly does not contain SDEE".format(zq_tu12_str),
+                                                              "{} SST wrongly does not contain SDEE {}".format(zq_tu12_str, QS_000_Print_Line_Function()))
                             
 
                                     '''
@@ -435,28 +488,37 @@ class Test(TestCase):
                                     zq_cmd=zq_msg.get_cmd_status()
                                     if zq_cmd == (True,'COMPLD'):
                                         dprint("\nOK\tCross-connection successfully deleted {}".format(zq_tu12_str),2)
+                                        self.add_success(NE1, "TL1 command","0.0", "Cross-connection successfully deleted {}".format(zq_tu12_str))
                                         zq_tl1_res=NE1.tl1.do("RTRV-TU12::{};".format(zq_tu12_str))
                                         zq_msg=TL1message(NE1.tl1.get_last_outcome())
                                         dprint(NE1.tl1.get_last_outcome(),1)
                                         zq_sst=zq_msg.get_cmd_sst("{}".format(zq_tu12_str))
                                         if 'SDEE' in zq_sst:
                                             dprint("KO\t\t{} SST wrongly contains SDEE".format(zq_tu12_str),2)
+                                            self.add_failure(NE1, "TL1 command","0.0", "{} SST wrongly contains SDEE".format(zq_tu12_str),
+                                                                  "{} SST wrongly contains SDEE {}".format(zq_tu12_str, QS_000_Print_Line_Function()))
                                         else:
                                             dprint("OK\t\t{} SST correctly does not contain SDEE".format(zq_tu12_str),2)
+                                            self.add_success(NE1, "TL1 command","0.0", "{} SST correctly does not contain SDEE".format(zq_tu12_str))
             
 
                                 else:
                                     dprint("\nKO\tCross-connection creation failed {}".format(zq_tu12_str),2)
+                                    self.add_failure(NE1, "TL1 command","0.0", "Cross-connection creation failed {}".format(zq_tu12_str),
+                                                          "Cross-connection creation failed {} {}".format(zq_tu12_str, QS_000_Print_Line_Function()))
 
                                 
                     
                 else: 
                     dprint("\nOK\t{} structure NOT changed to 63xTU12",2)
+                    self.add_success(NE1, "TL1 command","0.0", "{} structure NOT changed to 63xTU12")
                 
                 
             
             else:
                 dprint("\nKO\t{} structure NOT changed to 63xTU12",2)
+                self.add_failure(NE1, "TL1 command","0.0", "{} structure NOT changed to 63xTU12",
+                                      "{} structure NOT changed to 63xTU12 "+ QS_000_Print_Line_Function())
     
         '''
         Restore MVC4 structure to 3xTU3
@@ -478,10 +540,15 @@ class Test(TestCase):
                 zq_struct=zq_msg.get_cmd_attr_value("{}".format(zq_mvc4_str),'LOSTRUCT' )
                 if (zq_cmd[1]=='COMPLD' and zq_struct=='3xTU3'):
                     dprint("\nOK\t{} structure changed to 3xTU3".format(zq_mvc4_str),2)
+                    self.add_success(NE1, "TL1 command","0.0", "{} structure changed to 3xTU3".format(zq_mvc4_str))
                 else: 
                     dprint("\nKO\t{} structure NOT changed to 3xTU3",2)
+                    self.add_failure(NE1, "TL1 command","0.0", "{} structure NOT changed to 3xTU3",
+                                          "{} {} structure NOT changed to 3xTU3 "+ QS_000_Print_Line_Function())
             else:
                 dprint("\nKO\t{} structure NOT changed to 3xTU3",2)
+                self.add_failure(NE1, "TL1 command","0.0", "{} structure NOT changed to 3xTU3",
+                                      "{} {} structure NOT changed to 3xTU3 "+ QS_000_Print_Line_Function())
     
         '''
         Delete MVC4 cross-connection
@@ -492,8 +559,11 @@ class Test(TestCase):
             zq_cmd=zq_msg.get_cmd_status()
             if zq_cmd == (True,'COMPLD'):
                 dprint("\nOK\tCross-connection deletion successfull {}".format(zq_xc_list[zq_i]),2)
+                self.add_success(NE1, "TL1 command","0.0", "Cross-connection deletion successfull {}".format(zq_xc_list[zq_i]))
             else:    
                 dprint("\nKO\tCross-connection deletion failed {}".format(zq_xc_list[zq_i]),2)
+                self.add_failure(NE1, "TL1 command","0.0", "Cross-connection deletion failed {}".format(zq_xc_list[zq_i]),
+                                                          "Cross-connection deletion failed {} {}".format(zq_xc_list[zq_i], QS_000_Print_Line_Function()))
         
 
         

@@ -29,6 +29,7 @@ from katelibs.instrumentONT     import InstrumentONT
 from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import *
 import time
+from inspect import currentframe
 
 E_BLOCK_SIZE = 64
 E_MAX_MVC4 = 384
@@ -52,6 +53,16 @@ def dprint(zq_str,zq_level):
         print(zq_str)
     return
 
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
+
 
 def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
     
@@ -72,7 +83,8 @@ def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
     else:
         dprint("KO\tNumber of MVC4TU3 with SST containing PMD expected: {}".format(str(zq_sst_counter_exp*3)),2)
         dprint("\tNumber of MVC4TU3 with SST containing PMD received: {}".format(zq_sst_counter),2)
-        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 with SST containing PMD exp.[{}] rcv.[{}]".format(str(zq_sst_counter_exp*3), zq_sst_counter),"MVC4TU3 SST mismatch")
+        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 with SST containing PMD exp.[{}] rcv.[{}]".format(str(zq_sst_counter_exp*3), zq_sst_counter),
+        "MVC4TU3 with SST containing PMD exp.[{}] rcv.[{}] {}".format(str(zq_sst_counter_exp*3),zq_sst_counter,QS_000_Print_Line_Function()))
 
     return
 
@@ -96,7 +108,7 @@ def QS_020_Verify_Report(zq_run,zq_mtxlo_slot,zq_report_exp,zq_marker,zq_aid,zq_
     else:
         dprint("KO\tNumber of MVC4TU3 REPT DBCHG expected: {}".format(zq_report_exp*3),2)
         dprint("\tNumber of MVC4TU3 REPT DBCHG received: {}".format(zq_dbchg_num),2)
-        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format(zq_report_exp*3, zq_dbchg_num),"MVC4TU3 REPT DBCHG mismatch")
+        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format(zq_report_exp*3,zq_dbchg_num),"MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}] {}".format(zq_report_exp*3,zq_dbchg_num,QS_000_Print_Line_Function()))
 
     return
 
@@ -170,7 +182,7 @@ def QS_050_Check_PM_Time(zq_run,zq_mtxlo_slot, zq_counter_type, zq_locn, zq_dir,
                 else:
                     dprint("KO\tElapsed Time not increased for {} ".format(zq_tempo1_ary[1]),2)
                     zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "PM counter {} time NOT increased for {} ".format(zq_counter_type,zq_tempo1_ary[1])
-                                          ,"PM COUNTER CHECK MISMATCH")
+                                          ,"PM counter {} time NOT increased for {} {}".format(zq_counter_type,zq_tempo1_ary[1],QS_000_Print_Line_Function()))
                     
                     
         if zq_check_zero:
@@ -182,7 +194,7 @@ def QS_050_Check_PM_Time(zq_run,zq_mtxlo_slot, zq_counter_type, zq_locn, zq_dir,
                 dprint("KO\tPM counter {} time NOT increased for MVC4TU3s expected: {} ".format(zq_counter_type, E_MAX_MVC4*3),2)
                 dprint("\tPM counter {} time NOT increased for MVC4TU3s received: {} ".format(zq_counter_type, zq_not_elapsed_counter),2)
                 zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "PM counter {} time NOT increased for MVC4TU3s exp.[{}] - rcv.[{}] ".format(zq_counter_type, E_MAX_MVC4*3,zq_not_elapsed_counter)
-                                      ,"PM COUNTER CHECK MISMATCH")
+                                      ,"PM counter {} time NOT increased for MVC4TU3s exp.[{}] - rcv.[{}] {}".format(zq_counter_type, E_MAX_MVC4*3,zq_not_elapsed_counter,QS_000_Print_Line_Function()))
         else:
             if zq_counter == E_MAX_MVC4*3:
                 dprint("OK\tPM counter {} time increased for {} MVC4TU3s".format(zq_counter_type, zq_counter),2)
@@ -192,12 +204,12 @@ def QS_050_Check_PM_Time(zq_run,zq_mtxlo_slot, zq_counter_type, zq_locn, zq_dir,
                 dprint("KO\tPM counter {} time increased for MVC4TU3s expected: {} ".format(zq_counter_type, E_MAX_MVC4*3),2)
                 dprint("\tPM counter {} time increased for MVC4TU3s received: {} ".format(zq_counter_type, zq_counter),2)
                 zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "PM counter {} time increased for MVC4TU3s exp.[{}] - rcv.[{}] ".format(zq_counter_type, E_MAX_MVC4*3,zq_counter)
-                                      ,"PM COUNTER CHECK MISMATCH")
+                                      ,"PM counter {} time increased for MVC4TU3s exp.[{}] - rcv.[{}] ".format(zq_counter_type, E_MAX_MVC4*3,zq_counter,QS_000_Print_Line_Function()))
 
     else:
         dprint("KO\tError retrieving PM counter {}.".format(zq_counter_type),2)
         zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "Error retrieving PM counter {}.".format(zq_counter_type, E_MAX_MVC4*3,zq_counter)
-                              ,"PM COUNTER CHECK")
+                              ,"Error retrieving PM counter {}.".format(zq_counter_type, E_MAX_MVC4*3,zq_counter,QS_000_Print_Line_Function()))
         
     return 
 
@@ -217,7 +229,8 @@ def QS_070_Enable_Disable_POM(zq_run, zq_range, zq_mtxlo_slot,zq_enadis):
         
             else:
                 dprint("\nKO\tPom and EGPOM setting to [{}] for {}-{}-{} failed".format(zq_enadis,zq_mtxlo_slot,str(zq_i),str(zq_j)),2)
-                zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Pom and EGPOM setting to [{}] for {}-{}-{} failed".format(zq_enadis,zq_mtxlo_slot,str(zq_i),str(zq_j)),"TL1 command fail")
+                zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Pom and EGPOM setting to [{}] for {}-{}-{} failed".format(zq_enadis,zq_mtxlo_slot,str(zq_i),str(zq_j)),
+                                         "Pom and EGPOM setting to [{}] for {}-{}-{} failed {}".format(zq_enadis,zq_mtxlo_slot,str(zq_i),str(zq_j),QS_000_Print_Line_Function()))
     
     return
 

@@ -23,6 +23,7 @@ from katelibs.instrumentONT     import InstrumentONT
 from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import *
 import time
+from inspect import currentframe
 
 E_LO_MTX = "MXH60GLO"
 
@@ -41,6 +42,17 @@ def dprint(zq_str,zq_level):
     if (E_DPRINT & zq_level):
         print(zq_str)
     return
+
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
+
 
 def Q010_Remove_Board(zq_slot):
     zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_slot))
@@ -183,7 +195,7 @@ class Test(TestCase):
                     print("\t\tPTFTYPE: {}".format(zq_ptf_type))
                     print("\t\tPTFRATE: {}".format(zq_ptf_rate))
                     zq_num_ptf_ko+=1
-                    self.add_failure(NE1, "TL1 command","0.0", "Retrieving PTF: {}\n".format(zq_ptf_lista),"PTF not found!")
+                    self.add_failure(NE1, "TL1 command","0.0", "Retrieving PTF: {}\n".format(zq_ptf_lista),"PTF not found! "+ QS_000_Print_Line_Function())
                     #break
                 else:
                     print("OK\tRetrieving PTF: {}\n".format(zq_ptf_lista))
@@ -216,7 +228,7 @@ class Test(TestCase):
                     else:
                         print("KO\tRetrieving PTF:")
                         print("\t\tAID missing   : {}\n".format(zq_aid))
-                        self.add_failure(NE1, "TL1 command","0.0", "Retrieving PTF: {}\n".format(zq_aid),"PTF not found!")
+                        self.add_failure(NE1, "TL1 command","0.0", "Retrieving PTF: {}\n".format(zq_aid),"PTF not found! "+ QS_000_Print_Line_Function())
                         zq_num_ptf_ko+=1
                             
             print("\tNumber of correct MVC4TU3: {}".format(zq_num_ptf_ok))    
@@ -267,7 +279,7 @@ class Test(TestCase):
                 self.add_success(NE1, "TL1 command","0.0", "Correctly no MVC4TU3 exist after board deletion\n")
             else:
                 dprint('KO\tWrongly some MVC4TU3 exist after board deletion',2)
-                self.add_failure(NE1, "TL1 command","0.0", "RTRV-TU3::ALL","Wrongly some MVC4TU3 exist after board deletion")
+                self.add_failure(NE1, "TL1 command","0.0", "RTRV-TU3::ALL","Wrongly some MVC4TU3 exist after board deletion "+ QS_000_Print_Line_Function())
 
         self.stop_tps_block(NE1.id,"FM", "5-2-2-1")
 
@@ -331,7 +343,7 @@ class Test(TestCase):
                         self.add_success(NE1, "TL1 command","0.0", "Correctly no MVC4TU3 exist after board deletion\n")
                     else:
                         dprint('KO\tMVC4-{}-{} not structured to : 63xTU12'.format(zq_mtxlo_slot,zq_i),2)
-                        self.add_failure(NE1, "TL1 command","0.0", "RTRV-TU3::ALL","Wrongly some MVC4TU3 exist after board deletion")
+                        self.add_failure(NE1, "TL1 command","0.0", "RTRV-TU3::ALL","Wrongly some MVC4TU3 exist after board deletion "+ QS_000_Print_Line_Function())
 
         
         '''
@@ -360,7 +372,7 @@ class Test(TestCase):
                             else:
                                 print("KO\tRetrieving PTF:")
                                 print("\t\tAID missing   : {}\n".format(zq_aid))
-                                self.add_failure(NE1, "TL1 command","0.0", "Retrieving PTF: {}\n".format(zq_aid),"PTF not found!")
+                                self.add_failure(NE1, "TL1 command","0.0", "Retrieving PTF: {}\n".format(zq_aid),"PTF not found! "+ QS_000_Print_Line_Function())
                                 zq_num_ptf_ko+=1
                             
             print("\tNumber of correct MVC4TU12: {}".format(zq_num_ptf_ok))    

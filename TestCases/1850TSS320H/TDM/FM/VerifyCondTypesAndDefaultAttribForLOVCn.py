@@ -24,6 +24,7 @@ from katelibs.facility_tl1      import *
 import time
 import string
 import math
+from inspect import currentframe
 
 E_RFI_NUM = 1
 E_BLOCK_SIZE = 64        
@@ -88,6 +89,16 @@ def dprint(zq_str,zq_level):
         print(zq_str)
     return
 
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
+
 
 def QS_005_Check_Cond_Absence(zq_run, zq_fac, zq_container):
 
@@ -102,7 +113,7 @@ def QS_005_Check_Cond_Absence(zq_run, zq_fac, zq_container):
             zq_run.add_success(NE1, "No condition alarms found for {}".format(zq_container),"0.0", "Alarm Check")
         else:
             dprint("KO\tCondition Alarm found on some {}".format(zq_container),2)
-            zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "Condition Alarm found on some {}".format(zq_container),"Alarms check")
+            zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "Condition Alarm found on some {}".format(zq_container),"Alarms check "+ QS_000_Print_Line_Function())
             dprint(NE1.tl1.get_last_outcome(),2)
 
     return
@@ -128,7 +139,7 @@ def QS_010_Create_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq
         else:
             if zq_cmd[1]== 'COMPLD':    
                 dprint("\nKO\tCross-connection creation failed {}\n".format(zq_xc_list[zq_j]),2)
-                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection creation failure")
+                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection creation failure "+ QS_000_Print_Line_Function())
             else:
                 dprint("\nKO\tTL1 Cross-connection command DENY\n",2)
         zq_i += 1
@@ -147,7 +158,7 @@ def QS_020_Delete_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq
             zq_run.add_success(NE1, "Cross-connection deletion successful {}".format(zq_xc_list[zq_i]),"0.0", "Cross-connection deletion successful")
         else:    
             dprint("\nKO\tCross-connection deletion failed {}".format(zq_xc_list[zq_i]),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection deletion failure")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection deletion failure "+ QS_000_Print_Line_Function())
     
         zq_i += 1
 
@@ -173,7 +184,7 @@ def QS_030_Create_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
         else:
             dprint("\nKO\tCross-connection creation failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection creation failure")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection creation failure "+ QS_000_Print_Line_Function())
 
     return
 
@@ -201,7 +212,7 @@ def QS_035_Create_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
     
                 else:
                     dprint("\nKO\tCross-connection creation failed from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),2)
-                    zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail")
+                    zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail "+ QS_000_Print_Line_Function())
 
 
     return
@@ -224,7 +235,7 @@ def QS_040_Modify_AU4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_s
 
         else:
             dprint("\nKO\tHO Trace Identifier change failure for STM64AU4-{}-{}".format(zq_slot,zq_i),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","HO Trace Identifier change failure for STM64AU4-{}-{}".format(zq_slot,zq_i))
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","HO Trace Identifier change failure for STM64AU4-{}-{} {}".format(zq_slot,zq_i, QS_000_Print_Line_Function()))
 
         zq_i += 1
     return
@@ -243,7 +254,7 @@ def QS_050_Modify_MVC4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_
 
         else:
             dprint("\nKO\tHO Trace Identifier change failure for MVC4-{}-{}".format(zq_slot,zq_i),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","HO Trace Identifier change failure for MVC4-{}-{}".format(zq_slot,zq_i))
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","HO Trace Identifier change failure for MVC4-{}-{} {}".format(zq_slot,zq_i, QS_000_Print_Line_Function()))
         zq_i += 1
     return
 
@@ -263,7 +274,7 @@ def QS_055_Modify_MVC4TUn_LO_Trace_Block(zq_run, zq_vc3, zq_trace):
 
     else:
         dprint("\nKO\tLO Trace Identifier change failure for {}".format(zq_vc3),2)
-        zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","LO Trace Identifier change failure for {}".format(zq_vc3))
+        zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","LO Trace Identifier change failure for {} {}".format(zq_vc3, QS_000_Print_Line_Function()))
     
     return
 
@@ -287,7 +298,7 @@ def QS_060_Delete_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
         else:
             dprint("\nKO\tCross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j))
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Cross-connection deletion failed from {}-{} to {}-{} {}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j, QS_000_Print_Line_Function()))
 
     return
 
@@ -314,7 +325,7 @@ def QS_065_Delete_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
     
                 else:
                     dprint("\nKO\tCross-connection deletion failed from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2),2)
-                    zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection deletion failed from {} to {}".format(zq_tu12_idx1,zq_tu12_idx2))
+                    zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection deletion failed from {} to {} {}".format(zq_tu12_idx1,zq_tu12_idx2, QS_000_Print_Line_Function()))
     
     return
 
@@ -333,7 +344,7 @@ def QS_070_Enable_Disable_POM(zq_run, zq_mtx_slot, zq_vc4, zq_enadis):
     
         else:
             dprint("\nKO\tPom and EGPOM setting to [{}] for MVC4TU3-{}-{}-{} failed".format(zq_enadis,zq_mtx_slot, zq_vc4, zq_j),2)
-            zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Pom and EGPOM setting to [{}] for MVC4TU3-{}-{}-{} failed".format(zq_enadis,zq_mtx_slot, zq_vc4, zq_j))
+            zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","Pom and EGPOM setting to [{}] for MVC4TU3-{}-{}-{} failed {}".format(zq_enadis,zq_mtx_slot, zq_vc4, zq_j, QS_000_Print_Line_Function()))
         
     return
 
@@ -354,7 +365,7 @@ def QS_075_Enable_Disable_TRCMON(zq_run, zq_vc4, zq_enadis):
 
     else:
         dprint("\nKO\tTRCMON and EGTRCMON setting to [{}] for {} failed".format(zq_enadis, zq_vc4),2)
-        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","TRCMON and EGTRCMON setting to [{}] for {} failed".format(zq_enadis, zq_vc4))
+        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL","TRCMON and EGTRCMON setting to [{}] for {} failed {}".format(zq_enadis, zq_vc4, QS_000_Print_Line_Function()))
     
     return
 
@@ -376,7 +387,7 @@ def QS_077_Enable_Disable_POM(zq_run, zq_mtx_slot, zq_vc4, zq_enadis):
             
                 else:
                     dprint("\nKO\tPom and EGPOM setting to [{}] for {}-{}-{}-{} failed".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)),2)
-                    zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Pom and EGPOM setting to [{}] for {}-{}-{}-{} failed".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l)))
+                    zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Pom and EGPOM setting to [{}] for {}-{}-{}-{} failed {}".format(zq_enadis, zq_tu12_idx, str(zq_j), str(zq_m), str(zq_l), QS_000_Print_Line_Function()))
                 
     return
 
@@ -400,7 +411,7 @@ def QS_080_Set_Alm_Prof(zq_run,zq_fac_idx,zq_alm_prof):
     else:
         dprint("\nKO\tAlarm Profile changing to [{}] for {} failed".format(zq_alm_prof,zq_fac_idx),2)
         zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", 
-                           "TL1 COMMAND FAIL","Alarm Profile changing to [{}] for {} failed".format(zq_alm_prof,zq_fac_idx))
+                           "TL1 COMMAND FAIL","Alarm Profile changing to [{}] for {} failed {}".format(zq_alm_prof,zq_fac_idx), QS_000_Print_Line_Function())
 
     return
 
@@ -419,10 +430,10 @@ def QS_090_Check_FAC_pst(zq_run, zq_slot, zq_vc4_1, zq_j, zq_pst):
             zq_run.add_success(NE1, "Primary Status successful changed to {} for MVC4TU3-{}-{}-{} facility.".format(zq_pst, zq_slot, zq_vc4_1, zq_j),"0.0", "PRIMARY STATUS CHECK")
         else:
             dprint("KO\tPrimary Status wrong for MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j),2)
-            zq_run.add_failure(NE1,"Primary Status wrong for MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j),"0.0", "PRIMARY STATUS CHECK","Primary Status wrong for MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j))
+            zq_run.add_failure(NE1,"Primary Status wrong for MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j),"0.0", "PRIMARY STATUS CHECK","Primary Status wrong for MVC4TU3-{}-{}-{} facility {}.".format(zq_slot, zq_vc4_1, zq_j, QS_000_Print_Line_Function()))
     else:
         dprint("KO\tTL1 Command Timeout retrieving MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j),2)
-        zq_run.add_failure(NE1,"TL1 Command Timeout retrieving MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j),"0.0", "TL1 COMMAND","TL1 Command Timeout retrieving MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j))
+        zq_run.add_failure(NE1,"TL1 Command Timeout retrieving MVC4TU3-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j),"0.0", "TL1 COMMAND","TL1 Command Timeout retrieving MVC4TU3-{}-{}-{} facility {}.".format(zq_slot, zq_vc4_1, zq_j, QS_000_Print_Line_Function()))
         
     return
 
@@ -442,8 +453,8 @@ def QS_092_Set_FAC_pst(zq_run, zq_fac, zq_pst):
 
     else:
         dprint("\nKO\tPrimary status changing to {} for {} failed".format(zq_pst, zq_fac),2)
-        zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","Primary status changing to {} for {} failed"
-                           .format(zq_pst, zq_fac))
+        zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMAND FAIL","Primary status changing to {} for {} failed {}"
+                           .format(zq_pst, zq_fac, QS_000_Print_Line_Function()))
     
     return
 
@@ -465,7 +476,8 @@ def QS_095_Check_MVC4TU3_Alarm(zq_run,zq_vc3,zq_man_exp,zq_prio_exp,zq_sa_nsa_ex
         dprint(NE1.tl1.get_last_outcome(),1)
         if (zq_msg.get_cmd_response_size() == 0):
             dprint("KO\t{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),2)
-            zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0]".format(E_RFI_NUM))
+            zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),"0.0", 
+                               "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0] {}".format(E_RFI_NUM, QS_000_Print_Line_Function()))
         else:
             zq_cmd=zq_msg.get_cmd_status()
             if zq_cmd == (True,'COMPLD'):
@@ -496,11 +508,11 @@ def QS_095_Check_MVC4TU3_Alarm(zq_run,zq_vc3,zq_man_exp,zq_prio_exp,zq_sa_nsa_ex
                     dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir),2)
                     zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp: [{}-{}-{}-{}-{}] - Rcv [{}-{}-{}-{}-{}]".
                                        format(zq_man_exp, str(zq_vc3),zq_prio_exp,zq_man_exp,zq_sa_nsa_exp,zq_type_exp,zq_dir_exp,zq_prio,zq_man,zq_sa_nsa,zq_type,zq_dir),"0.0","{} CONDITION CHECK".
-                                       format(zq_man_exp),"{} Condition verification failure for {} facility : Exp: [{}-{}-{}-{}-{}] - Rcv [{}-{}-{}-{}-{}]".
-                                       format(zq_man_exp, str(zq_vc3),zq_prio_exp,zq_man_exp,zq_sa_nsa_exp,zq_type_exp,zq_dir_exp,zq_prio,zq_man,zq_sa_nsa,zq_type,zq_dir))
+                                       format(zq_man_exp),"{} Condition verification failure for {} facility : Exp: [{}-{}-{}-{}-{}] - Rcv [{}-{}-{}-{}-{}] {}".
+                                       format(zq_man_exp, str(zq_vc3),zq_prio_exp,zq_man_exp,zq_sa_nsa_exp,zq_type_exp,zq_dir_exp,zq_prio,zq_man,zq_sa_nsa,zq_type,zq_dir, QS_000_Print_Line_Function()))
     else:
         dprint("KO\t[{}] NOT found in current ASAP profile".format(zq_asap_str),2)
-        zq_run.add_failure(NE1,"[{}] NOT found in current ASAP profile".format(zq_asap_str),"0.0", "ASAP PROFILE CHECK","[{}] found in current ASAP profile".format(zq_asap_str))
+        zq_run.add_failure(NE1,"[{}] NOT found in current ASAP profile".format(zq_asap_str),"0.0", "ASAP PROFILE CHECK","[{}] found in current ASAP profile {}".format(zq_asap_str, QS_000_Print_Line_Function()))
             
     return
 
@@ -1255,7 +1267,7 @@ def QS_150_Check_No_Alarm(zq_run,zq_vc_range):
         zq_run.add_success(NE1,"Path is alarm free.","0.0","CONDITION ALARMS CHECK")
     else:
         dprint("KO\tAlarms are present on path.",2)
-        zq_run.add_failure(NE1,"Alarms are present on path.","0.0","CONDITION ALARMS CHECK","Alarms are present on path.")
+        zq_run.add_failure(NE1,"Alarms are present on path.","0.0","CONDITION ALARMS CHECK","Alarms are present on path. "+ QS_000_Print_Line_Function())
 
     return
 
@@ -1279,7 +1291,7 @@ def QS_200_Fill_ASAP_List(zq_run,zq_asap_userlabel):
         zq_run.add_success(NE1,"ASAP profile [{}] successfully retrieved".format(zq_asap_userlabel),"0.0","TL1 COMMAND")
     else:
         dprint("KO\tError retrieving ASAP profile: {}".format(zq_asap_userlabel),2)
-        zq_run.add_failure(NE1,"Error retrieving ASAP profile: {}".format(zq_asap_userlabel),"0.0","TL1 COMMAND","Error retrieving ASAP profile: {}".format(zq_asap_userlabel))
+        zq_run.add_failure(NE1,"Error retrieving ASAP profile: {}".format(zq_asap_userlabel),"0.0","TL1 COMMAND","Error retrieving ASAP profile: {} {}".format(zq_asap_userlabel, QS_000_Print_Line_Function()))
     return(zq_asap_list)
 
 
@@ -1297,10 +1309,10 @@ def QS_0900_Check_FAC_pst(zq_run, zq_slot, zq_vc4_1, zq_j, zq_k, zq_l, zq_pst):
             zq_run.add_success(NE1, "Primary Status successful changed to {} for MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_pst, zq_slot, zq_vc4_1, zq_j, zq_k, zq_l),"0.0", "PRIMARY STATUS CHECK")
         else:
             dprint("KO\tPrimary Status wrong for MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l),2)
-            zq_run.add_failure(NE1,"Primary Status wrong for MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l),"0.0", "PRIMARY STATUS CHECK","Primary Status wrong for MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l))
+            zq_run.add_failure(NE1,"Primary Status wrong for MVC4TU12-{}-{}-{}-{}-{} facility. {}".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l),"0.0", "PRIMARY STATUS CHECK","Primary Status wrong for MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l, QS_000_Print_Line_Function()))
     else:
         dprint("KO\tTL1 Command Timeout retrieving MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l),2)
-        zq_run.add_failure(NE1,"TL1 Command Timeout retrieving MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l),"0.0", "TL1 COMMAND","TL1 Command Timeout retrieving MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l))
+        zq_run.add_failure(NE1,"TL1 Command Timeout retrieving MVC4TU12-{}-{}-{}-{}-{} facility. {}".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l),"0.0", "TL1 COMMAND","TL1 Command Timeout retrieving MVC4TU12-{}-{}-{}-{}-{} facility.".format(zq_slot, zq_vc4_1, zq_j, zq_k, zq_l, QS_000_Print_Line_Function()))
         
     return
 
@@ -1321,8 +1333,7 @@ def QS_0950_Check_MVC4TU12_Alarm(zq_run,zq_vc3,zq_man_exp,zq_prio_exp,zq_sa_nsa_
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         dprint(NE1.tl1.get_last_outcome(),1)
         if (zq_msg.get_cmd_response_size() == 0):
-            dprint("KO\t{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),2)
-            zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0]".format(E_RFI_NUM))
+            zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0] {}".format(E_RFI_NUM, QS_000_Print_Line_Function()))
         else:
             zq_cmd=zq_msg.get_cmd_status()
             if zq_cmd == (True,'COMPLD'):
@@ -1353,11 +1364,11 @@ def QS_0950_Check_MVC4TU12_Alarm(zq_run,zq_vc3,zq_man_exp,zq_prio_exp,zq_sa_nsa_
                     dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir),2)
                     zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp: [{}-{}-{}-{}-{}] - Rcv [{}-{}-{}-{}-{}]".
                                        format(zq_man_exp, str(zq_vc3),zq_prio_exp,zq_man_exp,zq_sa_nsa_exp,zq_type_exp,zq_dir_exp,zq_prio,zq_man,zq_sa_nsa,zq_type,zq_dir),"0.0","{} CONDITION CHECK".
-                                       format(zq_man_exp),"{} Condition verification failure for {} facility : Exp: [{}-{}-{}-{}-{}] - Rcv [{}-{}-{}-{}-{}]".
-                                       format(zq_man_exp, str(zq_vc3),zq_prio_exp,zq_man_exp,zq_sa_nsa_exp,zq_type_exp,zq_dir_exp,zq_prio,zq_man,zq_sa_nsa,zq_type,zq_dir))
+                                       format(zq_man_exp),"{} Condition verification failure for {} facility : Exp: [{}-{}-{}-{}-{}] - Rcv [{}-{}-{}-{}-{}] {}".
+                                       format(zq_man_exp, str(zq_vc3),zq_prio_exp,zq_man_exp,zq_sa_nsa_exp,zq_type_exp,zq_dir_exp,zq_prio,zq_man,zq_sa_nsa,zq_type,zq_dir, QS_000_Print_Line_Function()))
     else:
         dprint("KO\t[{}] NOT found in current ASAP profile".format(zq_asap_str),2)
-        zq_run.add_failure(NE1,"[{}] NOT found in current ASAP profile".format(zq_asap_str),"0.0", "ASAP PROFILE CHECK","[{}] found in current ASAP profile".format(zq_asap_str))
+        zq_run.add_failure(NE1,"[{}] NOT found in current ASAP profile".format(zq_asap_str),"0.0", "ASAP PROFILE CHECK","[{}] found in current ASAP profile {}".format(zq_asap_str, QS_000_Print_Line_Function()))
             
     return
 
@@ -2126,6 +2137,7 @@ class Test(TestCase):
         DUT Setup section Implementation
         insert DUT SetUp code for your test below
         '''
+        
         NE1.tl1.do("ACT-USER::admin:::Alcatel1;")
 
 
@@ -2219,14 +2231,29 @@ class Test(TestCase):
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'COMPLD'):
-            zq_attr_list=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
-            if zq_attr_list['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
-                print("Board already equipped")
+            zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
+            if zq_attr_list1 is not None:
+                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                    print("Board equipped then delete!")
+                    zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                    zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                else:
+                    NE1.tl1.event_collection_start()
+                    time.sleep(10)
+                    zq_filter=TL1check()
+                    zq_filter.add_pst("IS")
+                    zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                    NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                zq_filter=TL1check()
-                zq_filter.add_pst("IS")
-                zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-                NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+                if zq_attr_list2 is not None:
+                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                        NE1.tl1.event_collection_start()
+                        time.sleep(10)
+                        zq_filter=TL1check()
+                        zq_filter.add_pst("IS")
+                        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                        NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
 
 
         

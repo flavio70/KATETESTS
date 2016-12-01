@@ -22,6 +22,7 @@ from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import *
 import time
 import string
+from inspect import currentframe
 
 
 def dprint(zq_str,zq_level):
@@ -40,6 +41,17 @@ def dprint(zq_str,zq_level):
         print(zq_str)
     return
 
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
+
+
 def QS_010_No_MAN_presence(zq_run, zq_fac):
 
     zq_tl1_res=NE1.tl1.do("RTRV-COND-{}::ALL:::MAN;".format(zq_fac.upper()))
@@ -53,7 +65,7 @@ def QS_010_No_MAN_presence(zq_run, zq_fac):
             zq_run.add_success(NE1, "No MAN condition alarms found for M{}s".format(zq_fac.upper()),"0.0", "Alarm Check")
         else:
             dprint("KO\tCondition MAN Alarm found on some M{}s".format(zq_fac.upper()),2)
-            zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "Condition MAN Alarm found on some M{}s".format(zq_fac.upper()),"Alarms check")
+            zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "Condition MAN Alarm found on some M{}s".format(zq_fac.upper()),"Alarms check "+ QS_000_Print_Line_Function())
             dprint(NE1.tl1.get_last_outcome(),2)
 
     return
@@ -115,10 +127,10 @@ def QS_030_Verify_Fac_MAN_Alarm(zq_run, zq_cmd, zq_fac_type, zq_check_num):
             zq_run.add_success(NE1, "MAN Condition verification successful for {} facility : Exp [{}] - Rcv [{}]".format(zq_fac_type, zq_check_num, zq_man_nbr),"0.0", "MAN CONDITION CHECK")
         else:
             dprint("KO\tMAN Condition verification failure for {} facility : Exp [{}] - Rcv [{}]".format(zq_fac_type, zq_check_num, zq_man_nbr),2)
-            zq_run.add_failure(NE1,"MAN Condition verification failure for {} facility : Exp [{}] - Rcv [{}]".format(zq_fac_type, zq_check_num, zq_man_nbr),"0.0", "MAN Condition verification failure: Exp [{}] - Rcv [{}]".format(E_MAX_VC4,zq_man_nbr),"MAN CONDITION CHECK")
+            zq_run.add_failure(NE1,"MAN Condition verification failure for {} facility : Exp [{}] - Rcv [{}]".format(zq_fac_type, zq_check_num, zq_man_nbr),"0.0", "MAN Condition verification failure: Exp [{}] - Rcv [{}]".format(E_MAX_VC4,zq_man_nbr),"MAN CONDITION CHECK "+ QS_000_Print_Line_Function())
             
     else:
-        zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "TL1 COMMAND FAILURE","TL1 COMMAND")
+        zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "TL1 COMMAND FAILURE","TL1 COMMAND "+ QS_000_Print_Line_Function())
         dprint("TL1 COMMAND FAILURE",2)
         dprint(NE1.tl1.get_last_outcome(),1)
 

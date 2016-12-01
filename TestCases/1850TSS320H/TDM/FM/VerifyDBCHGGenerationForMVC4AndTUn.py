@@ -22,6 +22,7 @@ from katelibs.instrumentONT     import InstrumentONT
 from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import * 
 import time
+from inspect import currentframe
 
 
 def dprint(zq_str,zq_level):
@@ -39,6 +40,16 @@ def dprint(zq_str,zq_level):
     if (E_DPRINT & zq_level):
         print(zq_str)
     return
+
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
 
 
 class Test(TestCase):
@@ -174,7 +185,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4 REPT DBCHG expected: {}".format("1"),2)
             dprint("\tNumber of MVC4 REPT DBCHG received: {}".format(zq_dbchg_num),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 REPT DBCHG exp.[{}] rcv.[{}]".format("1", zq_dbchg_num),"MVC4 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 REPT DBCHG exp.[{}] rcv.[{}]".format("1", zq_dbchg_num),"MVC4 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
         self.stop_tps_block(NE1.id,"FM","5-2-6-1")
         
@@ -187,7 +198,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU3 REPT DBCHG expected: {}".format("1"),2)
             dprint("\tNumber of MVC4TU3 REPT DBCHG received: {}".format(zq_dbchg_tu3),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format("1",zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format("1",zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
         NE1.tl1.event_collection_stop()
         self.stop_tps_block(NE1.id,"FM","5-2-6-2")
@@ -245,7 +256,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU3 REPT DBCHG expected: {}".format(E_LOA_MVC4TU3),2)
             dprint("\tNumber of MVC4TU3 REPT DBCHG received: {}".format(zq_dbchg_tu3),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
 
         if zq_dbchg_tu12 == E_LOA_MVC4TU12:
@@ -254,7 +265,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU12 REPT DBCHG expected: {}".format(E_LOA_MVC4TU12),2)
             dprint("\tNumber of MVC4TU12 REPT DBCHG received: {}".format(zq_dbchg_tu12),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU12,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU12,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
 
         '''
@@ -285,7 +296,7 @@ class Test(TestCase):
                 self.add_success(NE1, "EVENTS COLLECTION","0.0", "All MVC4TU12 deleted")
             else:
                 dprint("KO\tDelete MVC4TU12 failed",2)
-                self.add_failure(NE1, "EVENTS COLLECTION","0.0", "Delete MVC4TU12 failed","Some MVC4TU12 still exist")
+                self.add_failure(NE1, "EVENTS COLLECTION","0.0", "Delete MVC4TU12 failed","Some MVC4TU12 still exist "+ QS_000_Print_Line_Function())
 
         
         NE1.tl1.event_collection_stop()
@@ -306,7 +317,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU12 grouped REPT DBCHG expected: {}".format(E_LOA_MVC4TU3),2)
             dprint("\tNumber of MVC4TU12 grouped REPT DBCHG received: {}".format(zq_dbchg_tu12),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 grouped REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 grouped REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
         
         self.stop_tps_block(NE1.id,"FM","5-2-6-3")
