@@ -22,6 +22,7 @@ from katelibs.instrumentONT     import InstrumentONT
 from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import * 
 import time
+from inspect import currentframe
 
 
 def dprint(zq_str,zq_level):
@@ -39,6 +40,16 @@ def dprint(zq_str,zq_level):
     if (E_DPRINT & zq_level):
         print(zq_str)
     return
+
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
 
 
 class Test(TestCase):
@@ -96,6 +107,40 @@ class Test(TestCase):
         zq_stm64_1=NE1.get_preset("S1")
         zq_mtxlo_slot=NE1.get_preset("M1")
 
+        '''
+        Board equipment if not yet!
+        '''
+        zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+        zq_msg=TL1message(NE1.tl1.get_last_outcome())
+        zq_cmd=zq_msg.get_cmd_status()
+        if zq_cmd == (True,'COMPLD'):
+            zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
+            if zq_attr_list1 is not None:
+                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                    print("Board equipped then delete!")
+                    zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                    zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                else:
+                    NE1.tl1.event_collection_start()
+                    time.sleep(10)
+                    zq_filter=TL1check()
+                    zq_filter.add_pst("IS")
+                    zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                    NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+            else:
+                if zq_attr_list2 is not None:
+                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                        NE1.tl1.event_collection_start()
+                        time.sleep(10)
+                        zq_filter=TL1check()
+                        zq_filter.add_pst("IS")
+                        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                        NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+
+
+        
+        '''        
         zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         zq_cmd=zq_msg.get_cmd_status()
@@ -105,7 +150,8 @@ class Test(TestCase):
                 print("Board equipped then delete!")
                 zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                 zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-
+        '''
+                        
         NE1.tl1.event_collection_start()
         time.sleep(10)
 
@@ -139,7 +185,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4 REPT DBCHG expected: {}".format("1"),2)
             dprint("\tNumber of MVC4 REPT DBCHG received: {}".format(zq_dbchg_num),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 REPT DBCHG exp.[{}] rcv.[{}]".format("1", zq_dbchg_num),"MVC4 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 REPT DBCHG exp.[{}] rcv.[{}]".format("1", zq_dbchg_num),"MVC4 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
         self.stop_tps_block(NE1.id,"FM","5-2-6-1")
         
@@ -152,7 +198,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU3 REPT DBCHG expected: {}".format("1"),2)
             dprint("\tNumber of MVC4TU3 REPT DBCHG received: {}".format(zq_dbchg_tu3),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format("1",zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format("1",zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
         NE1.tl1.event_collection_stop()
         self.stop_tps_block(NE1.id,"FM","5-2-6-2")
@@ -210,7 +256,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU3 REPT DBCHG expected: {}".format(E_LOA_MVC4TU3),2)
             dprint("\tNumber of MVC4TU3 REPT DBCHG received: {}".format(zq_dbchg_tu3),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU3 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu3),"MVC4TU3 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
 
         if zq_dbchg_tu12 == E_LOA_MVC4TU12:
@@ -219,7 +265,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU12 REPT DBCHG expected: {}".format(E_LOA_MVC4TU12),2)
             dprint("\tNumber of MVC4TU12 REPT DBCHG received: {}".format(zq_dbchg_tu12),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU12,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU12,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
 
         '''
@@ -250,7 +296,7 @@ class Test(TestCase):
                 self.add_success(NE1, "EVENTS COLLECTION","0.0", "All MVC4TU12 deleted")
             else:
                 dprint("KO\tDelete MVC4TU12 failed",2)
-                self.add_failure(NE1, "EVENTS COLLECTION","0.0", "Delete MVC4TU12 failed","Some MVC4TU12 still exist")
+                self.add_failure(NE1, "EVENTS COLLECTION","0.0", "Delete MVC4TU12 failed","Some MVC4TU12 still exist "+ QS_000_Print_Line_Function())
 
         
         NE1.tl1.event_collection_stop()
@@ -271,7 +317,7 @@ class Test(TestCase):
         else:
             dprint("KO\tNumber of MVC4TU12 grouped REPT DBCHG expected: {}".format(E_LOA_MVC4TU3),2)
             dprint("\tNumber of MVC4TU12 grouped REPT DBCHG received: {}".format(zq_dbchg_tu12),2)
-            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 grouped REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch")
+            self.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4TU12 grouped REPT DBCHG exp.[{}] rcv.[{}]".format(E_LOA_MVC4TU3,zq_dbchg_tu12),"MVC4TU12 REPT DBCHG mismatch "+ QS_000_Print_Line_Function())
 
         
         self.stop_tps_block(NE1.id,"FM","5-2-6-3")

@@ -23,6 +23,7 @@ from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import * 
 import time
 import math
+from inspect import currentframe
 
 
 def dprint(zq_str,zq_level):
@@ -40,6 +41,17 @@ def dprint(zq_str,zq_level):
     if (E_DPRINT & zq_level):
         print(zq_str)
     return
+
+
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
 
 
 class Test(TestCase):
@@ -141,11 +153,10 @@ class Test(TestCase):
                 
             if zq_unused_num == E_LOA_MVC4:
                 dprint("OK\tAll MVC4 are UNUSED",2)
-                self.add_success(NE1, "MVC4 CONSTATE","0.0", "All MVC4 are UNUSED")
+                self.add_success(NE1, "MVC4 CONSTATE","0.0", "All MVC4 are UNUSED ")
             else:
                 dprint("KO\tNot all MVC4 are UNUSED",2)
-                self.add_failure(NE1, "MVC4 CONSTATE","0.0", "Not all MVC4 are UNUSED","Not all MVC4 are UNUSED")
-            
+                self.add_failure(NE1, "MVC4 CONSTATE","0.0", "Not all MVC4 are UNUSED","Not all MVC4 are UNUSED "+ QS_000_Print_Line_Function())
                 
         '''
         Create VCGVC4 group with E_VCGVC4_MAXMBR and verify again all MVC4 are still UNUSED
@@ -164,7 +175,7 @@ class Test(TestCase):
             zq_cmd=zq_msg.get_cmd_status()
             if zq_cmd == (True,'COMPLD'):
                 dprint("OK\tLOPOOL successfully retrieved",2)
-                self.add_success(NE1, "LOPOOL successfully retrieved","0.0", "LOPOOL successfully retrieved")
+                self.add_success(NE1, "LOPOOL successfully retrieved","0.0", "LOPOOL successfully retrieved "+ QS_000_Print_Line_Function())
                 zq_unused_num = 0
                 for zq_i in range(1,E_MAX_VC4):
                     zq_mvc4_use=zq_msg.get_cmd_attr_value("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i), "CONSTATE")
@@ -173,17 +184,18 @@ class Test(TestCase):
                     
                 if zq_unused_num == E_LOA_MVC4:
                     dprint("OK\tAll MVC4 are UNUSED",2)
-                    self.add_success(NE1, "MVC4 CONSTATE","0.0", "All MVC4 are UNUSED")
+                    self.add_success(NE1, "MVC4 CONSTATE","0.0", "All MVC4 are UNUSED ")
                 else:
                     dprint("KO\tNot all MVC4 are UNUSED",2)
-                    self.add_failure(NE1, "MVC4 CONSTATE","0.0", "Not all MVC4 are UNUSED","Not all MVC4 are UNUSED")
+                    self.add_failure(NE1, "MVC4 CONSTATE","0.0", "Not all MVC4 are UNUSED","Not all MVC4 are UNUSED "+ QS_000_Print_Line_Function())
             else:
                 dprint("KO\tLOPOOL retrieve failure",2)
-                self.add_failure(NE1, "TL1 COMMAND","0.0", "LOPOOL retrieve failure", "LOPOOL retrieve failure")
+                self.add_failure(NE1, "TL1 COMMAND","0.0", "LOPOOL retrieve failure", "LOPOOL retrieve failure "+ QS_000_Print_Line_Function())
         
         else:        
             dprint("KO\tVCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR),2)
-            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR),"TL1 command fail")
+            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR),
+            			  "VCG-{}-{} group with {} member creation failed {}".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR,QS_000_Print_Line_Function()))
         
         
         '''
@@ -202,7 +214,7 @@ class Test(TestCase):
                 self.add_success(NE1, "Cross-connection creation successfull {}".format(zq_xc_list[zq_i]),"0.0", "Cross-connection creation successfull")
             else:
                 dprint("KO\tCross-connection creation failure",2)
-                self.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail")
+                self.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","Cross-connection creation failure "+ QS_000_Print_Line_Function())
                 
         
         '''
@@ -217,7 +229,8 @@ class Test(TestCase):
             self.add_success(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member created".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR))
         else:
             dprint("KO\tVCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR),2)
-            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR),"TL1 command fail")
+            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR),
+                                  "VCG-{}-{} group with {} member creation failed {}".format(zq_pp10ms_slot,E_START_VC4,E_VCGVC4_MAXMBR,QS_000_Print_Line_Function()))
 
         '''
         Create VCGVC12 group with E_VCGVC12_MAXMBR and verify that (E_VCGVC12_MAXMBR div 63) MVC4 are USEDBYLOVCGMEM 
@@ -231,7 +244,8 @@ class Test(TestCase):
             self.add_success(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member created".format(zq_pp10ms_slot,E_START_VC12,E_VCGVC12_MAXMBR))
         else:
             dprint("KO\tVCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC12,E_VCGVC12_MAXMBR),2)
-            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC12,E_VCGVC12_MAXMBR),"TL1 command fail")
+            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group with {} member creation failed".format(zq_pp10ms_slot,E_START_VC12,E_VCGVC12_MAXMBR),
+            			  "VCG-{}-{} group with {} member creation failed {}".format(zq_pp10ms_slot,E_START_VC12,E_VCGVC12_MAXMBR,QS_000_Print_Line_Function()))
 
 
         '''
@@ -260,7 +274,7 @@ class Test(TestCase):
                 self.add_success(NE1, "MVC4 CONSTATE ALL","0.0", "All MVC4 are reported")
             else:
                 dprint("KO\tNot all MVC4 are reported",2)
-                self.add_failure(NE1, "MVC4 CONSTATE ALL","0.0", "Not all MVC4 are reported","Not all MVC4 are reported")
+                self.add_failure(NE1, "MVC4 CONSTATE ALL","0.0", "Not all MVC4 are reported","Not all MVC4 are reported "+ QS_000_Print_Line_Function())
             
             '''
             Check number of USEDBYLOVCGMEM MVC4:
@@ -272,7 +286,8 @@ class Test(TestCase):
             else:
                 dprint("KO\tMVC4 in USEDBYLOVCGMEM exp: {} ".format(((E_VCGVC3_MAXMBR*21+E_VCGVC12_MAXMBR) // 63)),2)
                 dprint("\tMVC4 in USEDBYLOVCGMEM act: {} ".format(zq_usedbylovcgmem_num),2)
-                self.add_failure(NE1, "MVC4 CONSTATE CHECK","0.0", "MVC4 in CONSTATE=USEDBYLOVCGMEM is wrong","MVC4 in CONSTATE=USEDBYLOVCGMEM is wrong")
+                self.add_failure(NE1, "MVC4 CONSTATE CHECK","0.0", "MVC4 in CONSTATE=USEDBYLOVCGMEM is wrong",
+                                      "MVC4 in CONSTATE=USEDBYLOVCGMEM is wrong "+ QS_000_Print_Line_Function())
                 
             '''
             Check number of USEDBYHOCC MVC4:
@@ -282,9 +297,10 @@ class Test(TestCase):
                 dprint("OK\tMVC4 in CONSTATE=USEDBYHOCC is correct",2)
                 self.add_success(NE1, "MVC4 CONSTATE CHECK","0.0", "MVC4 in CONSTATE=USEDBYHOCC is correct")
             else:
-                dprint("KO\tMVC4 in CONSTATE=USEDBYHOCC exp: {} ".format(E_HO_CONN-1,2))
-                dprint("\tMVC4 in CONSTATE=USEDBYHOCC act: {} ".format(zq_usedbyhocc_num,2))
-                self.add_failure(NE1, "MVC4 CONSTATE CHECK","0.0", "MVC4 in CONSTATE=USEDBYHOCC is wrong","MVC4 in CONSTATE=USEDBYHOCC is wrong")
+                dprint("KO\tMVC4 in CONSTATE=USEDBYHOCC exp: {} ".format(E_HO_CONN-1),2)
+                dprint("\tMVC4 in CONSTATE=USEDBYHOCC act: {} ".format(zq_usedbyhocc_num),2)
+                self.add_failure(NE1, "MVC4 CONSTATE CHECK","0.0", "MVC4 in CONSTATE=USEDBYHOCC is wrong",
+                                      "MVC4 in CONSTATE=USEDBYHOCC is wrong "+ QS_000_Print_Line_Function())
                 
             '''
             Check number of UNUSED MVC4:
@@ -296,7 +312,8 @@ class Test(TestCase):
             else:
                 dprint("KO\tMVC4 in CONSTATE=UNUSED exp: {} ".format(E_LOA_MVC4-(E_HO_CONN-1)-math.ceil(((E_VCGVC3_MAXMBR*21+E_VCGVC12_MAXMBR) / 63))),2)
                 dprint("\tMVC4 in CONSTATE=USEDBYHOCC act: {} ".format(zq_unused_num),2)
-                self.add_failure(NE1, "MVC4 CONSTATE=ALL CHECK","0.0", "MVC4 in CONSTATE=UNUSED is wrong","MVC4 in CONSTATE=UNUSED is wrong")
+                self.add_failure(NE1, "MVC4 CONSTATE=ALL CHECK","0.0", "MVC4 in CONSTATE=UNUSED is wrong",
+                 		      "MVC4 in CONSTATE=UNUSED is wrong "+ QS_000_Print_Line_Function())
              
         
 
@@ -321,7 +338,8 @@ class Test(TestCase):
             else:
                 dprint("KO\tMVC4 in CONSTATE=UNUSED exp: {} ".format(E_LOA_MVC4-(E_HO_CONN-1)-math.ceil(((E_VCGVC3_MAXMBR*21+E_VCGVC12_MAXMBR) / 63))),2)
                 dprint("\tMVC4 in CONSTATE=USEDBYHOCC act: {} ".format(zq_unused_num),2)
-                self.add_failure(NE1, "MVC4 CONSTATE=UNUSED CHECK","0.0", "MVC4 in CONSTATE=UNUSED is wrong","MVC4 in CONSTATE=UNUSED is wrong")
+                self.add_failure(NE1, "MVC4 CONSTATE=UNUSED CHECK","0.0", "MVC4 in CONSTATE=UNUSED is wrong",
+                 		      "MVC4 in CONSTATE=UNUSED is wrong "+ QS_000_Print_Line_Function())
 
 
 
@@ -345,7 +363,8 @@ class Test(TestCase):
             else:
                 dprint("KO\tMVC4 in CONSTATE=USEDBYHOCC exp: {} ".format(E_HO_CONN-1),2)
                 dprint("\tMVC4 in CONSTATE=USEDBYHOCC act: {} ".format(zq_usedbyhocc_num),2)
-                self.add_failure(NE1, "MVC4 CONSTATE=USEDBYHOCC CHECK","0.0", "MVC4 in CONSTATE=USEDBYHOCC is wrong","MVC4 in CONSTATE=USEDBYHOCC is wrong")
+                self.add_failure(NE1, "MVC4 CONSTATE=USEDBYHOCC CHECK","0.0", "MVC4 in CONSTATE=USEDBYHOCC is wrong",
+                 		      "MVC4 in CONSTATE=USEDBYHOCC is wrong "+ QS_000_Print_Line_Function())
 
 
         
@@ -368,7 +387,8 @@ class Test(TestCase):
                 self.add_success(NE1, "Cross-connection deletion successfull {}".format(zq_xc_list[zq_i]),"0.0", "Cross-connection deletion successfull")
             else:    
                 dprint("KO\tCross-connection deletion failed {}".format(zq_xc_list[zq_i]),2)
-                self.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection deletion failure","TL1 command fail")
+                self.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection deletion failure",
+                                      "TL1 command fail "+ QS_000_Print_Line_Function())
         
         
         '''
@@ -383,7 +403,8 @@ class Test(TestCase):
             self.add_success(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group successfully deleted".format(zq_pp10ms_slot,E_START_VC4))
         else:
             dprint("KO\tVCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC4),2)
-            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC4),"TL1 command failure")
+            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC4),
+                                  "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC4,QS_000_Print_Line_Function()))
             
         '''
         Delete VCGVC3 group
@@ -397,7 +418,8 @@ class Test(TestCase):
             self.add_success(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group successfully deleted".format(zq_pp10ms_slot,E_START_VC3))
         else:
             dprint("KO\tVCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC3),2)
-            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC3),"TL1 command failure")
+            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC3),
+                                  "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC3,QS_000_Print_Line_Function()))
 
         '''
         Delete VCGVC12 group
@@ -411,7 +433,8 @@ class Test(TestCase):
             self.add_success(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group successfully deleted".format(zq_pp10ms_slot,E_START_VC12))
         else:
             dprint("KO\tVCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC12),2)
-            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC12),"TL1 command failure")
+            self.add_failure(NE1, "TL1 COMMAND","0.0", "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC12),
+                                  "VCG-{}-{} group deletion failure".format(zq_pp10ms_slot,E_START_VC12,QS_000_Print_Line_Function()))
 
         
         self.stop_tps_block(NE1.id,"FM", "5-2-7-1")

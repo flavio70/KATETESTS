@@ -24,6 +24,7 @@ from katelibs.facility_tl1      import *
 import time
 import string
 import math
+from inspect import currentframe
 
 E_MAX_MVC4 = 384
 E_LO_MTX = "MXH60GLO"
@@ -49,6 +50,17 @@ def dprint(zq_str,zq_level):
         print(zq_str)
     return
 
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
+
+
 def QS_010_Create_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq_xc_list):
     '''
     # Create zq_block_size HO cross-connection between STM1AU4x and LOPOOL
@@ -69,9 +81,10 @@ def QS_010_Create_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq
         else:
             if zq_cmd[1]== 'COMPLD':    
                 dprint("\nKO\tCross-connection creation failed {}\n".format(zq_xc_list[zq_j]),2)
-                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection creation failure")
+                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection creation failure " + QS_000_Print_Line_Function())
             else:
                 dprint("\nKO\tTL1 Cross-connection command DENY\n",2)
+                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "TL1 Cross-connection command DENY " + QS_000_Print_Line_Function())
         zq_i += 1
     return
 
@@ -88,7 +101,7 @@ def QS_020_Delete_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq
             zq_run.add_success(NE1, "Cross-connection deletion successful {}".format(zq_xc_list[zq_i]),"0.0", "Cross-connection deletion successful")
         else:    
             dprint("\nKO\tCross-connection deletion failed {}".format(zq_xc_list[zq_i]),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection deletion failure")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection deletion failure " + QS_000_Print_Line_Function())
     
         zq_i += 1
 
@@ -114,7 +127,8 @@ def QS_030_Create_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
         else:
             dprint("\nKO\tCross-connection creation failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection creation failure")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", 
+                                    "Cross-connection creation failed from {}-{} to {}-{} {}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j,QS_000_Print_Line_Function()))
 
     return
 
@@ -135,7 +149,8 @@ def QS_040_Modify_AU4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_s
 
         else:
             dprint("\nKO\tHO Trace Identifier change failure for STM64AU4-{}-{}".format(zq_slot,zq_i),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "HO Trace Identifier change failure for STM64AU4-{}-{}".format(zq_slot,zq_i))
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", 
+                                    "HO Trace Identifier change failure for STM64AU4-{}-{} {}".format(zq_slot,zq_i,QS_000_Print_Line_Function()))
 
         zq_i += 1
     return
@@ -154,7 +169,8 @@ def QS_050_Modify_MVC4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_
 
         else:
             dprint("\nKO\tHO Trace Identifier change failure for MVC4-{}-{}".format(zq_slot,zq_i),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "HO Trace Identifier change failure for MVC4-{}-{}".format(zq_slot,zq_i))
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", 
+                                    "HO Trace Identifier change failure for MVC4-{}-{} {}".format(zq_slot,zq_i,QS_000_Print_Line_Function()))
         zq_i += 1
     return
 
@@ -178,7 +194,8 @@ def QS_060_Delete_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
         else:
             dprint("\nKO\tCross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "Cross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j))
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", 
+                                    "Cross-connection deletion failed from {}-{} to {}-{} {}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j,QS_000_Print_Line_Function()))
 
     return
 
@@ -208,7 +225,7 @@ def QS_070_Check_No_Alarm(zq_run, zq_ONT_p1, zq_ONT_p2, zq_vc4_ch1, zq_vc4_ch2):
             dprint("\nKO\tAlarms found on path: {}".format(zq_alm1[1]),2)
             dprint("\n\tAlarms found on path: {}".format(zq_alm2[1]),2)
             zq_run.add_failure(NE1, "CHECK PATH ALARMS","0.0", "PATH ALARMS FOUND"
-                                  , "Path alarms found: {}-{}".format(zq_alm1[1],zq_alm2[1]))
+                                  , "Path alarms found: {}-{} {}".format(zq_alm1[1],zq_alm2[1],QS_000_Print_Line_Function()))
 
 
     return  zq_res
@@ -238,7 +255,8 @@ def QS_090_Set_PM_Mode(zq_run, zq_vc4_idx, zq_locn, zq_mode, zq_period, zq_dir="
         zq_run.add_success(NE1, "TL1 Command","0.0", "PM set to {} for {}: [{}]-[{}]-[{}]".format(zq_mode, zq_vc4_idx,zq_locn,zq_dir,zq_period))
     else:
         dprint("KO\tPM NOT set to {} for {}: [{}]-[{}]-[{}]".format(zq_mode, zq_vc4_idx,zq_locn,zq_dir,zq_period),2)
-        zq_run.add_failure(NE1, "TL1 Command","0.0", "TL1 Command not successful", "PM set to {} for {}: [{}]-[{}]-[{}]".format(zq_mode, zq_vc4_idx,zq_locn,zq_dir,zq_period))
+        zq_run.add_failure(NE1, "TL1 Command","0.0", "TL1 Command not successful", 
+                                "PM set to {} for {}: [{}]-[{}]-[{}] {}".format(zq_mode, zq_vc4_idx,zq_locn,zq_dir,zq_period,QS_000_Print_Line_Function()))
 
     return
     
@@ -267,7 +285,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
             dprint("OK\tAll PM counter [{}]-[15-MIN] for {} are 0.".format(zq_locn, zq_vc4_idx1),2)
             zq_run.add_success(NE1, "PM Counter Reading","0.0", "All PM counter [{}]-[15-MIN] for {} are 0.".format(zq_locn, zq_vc4_idx1))
         else:
-            zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "Some PM counter [{}]-[15-MIN] for {} not 0.".format(zq_locn, zq_vc4_idx1))
+            zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                    "Some PM counter [{}]-[15-MIN] for {} not 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
             dprint("KO\tSome PM counter [{}]-[15-MIN] for {} not 0.".format(zq_locn, zq_vc4_idx1),2)
             dprint("\tPM counter BBE: {}".format(zq_bbe),2)
             dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -308,7 +327,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                 dprint("OK\tAll PM counter [{}]-[1-DAY] for {} are 0.".format(zq_locn, zq_vc4_idx1),2)
                 zq_run.add_success(NE1, "PM Counter Reading","0.0", "All PM counter [{}]-[1-DAY] for {} are 0.".format(zq_locn, zq_vc4_idx1))
             else:
-                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "Some PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1))
+                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                        "Some PM counter [{}]-[1-DAY] for {} not 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
                 dprint("KO\tSome PM counter [{}]-[1-DAY] for {} not 0.".format(zq_locn, zq_vc4_idx1),2)
                 dprint("\tPM counter BBE: {}".format(zq_bbe),2)
                 dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -346,7 +366,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
             zq_run.add_success(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[15-MIN] for {} were incremented.".format(zq_locn, zq_vc4_idx1))
         else:
             dprint("KO\tPM counter [{}]-[15-MIN] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
-            zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "PM counter [{}]-[15-MIN] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
+            zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                    "PM counter [{}]-[15-MIN] for {} are still 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
 
         dprint("\tPM counter BBE: {}".format(zq_bbe),2)
         dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -370,7 +391,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                 zq_run.add_success(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1))
             else:
                 dprint("KO\tSome PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
-                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "Some PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
+                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                        "Some PM counter [{}]-[1-DAY] for {} are still 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
 
             dprint("\tPM counter BBE-NE: {}".format(zq_bbe_ne),2)
             dprint("\tPM counter BBE-FE: {}".format(zq_bbe_fe),2)
@@ -388,7 +410,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                 zq_run.add_success(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1))
             else:
                 dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
-                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
+                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                        "PM counter [{}]-[1-DAY] for {} are still 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
 
             dprint("\tPM counter BBE: {}".format(zq_bbe),2)
             dprint("\tPM counter  ES: {}".format(zq_es),2)
@@ -425,7 +448,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
             dprint("\tPM counter UAS: {}".format(zq_uas),2)
             zq_run.add_success(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[15-MIN] for {} were incremented.".format(zq_locn, zq_vc4_idx1))
         else:
-            zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "PM counter [{}]-[15-MIN] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
+            zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                    "PM counter [{}]-[15-MIN] for {} are still 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
             dprint("KO\tPM counter [{}]-[15-MIN] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
             dprint("\tPM counter UAS: {}".format(zq_uas),2)
         
@@ -437,7 +461,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                 dprint("\tPM counter UAS-BI: {}".format(zq_uas_bi),2)
                 zq_run.add_success(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1))
             else:
-                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
+                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                        "PM counter [{}]-[1-DAY] for {} are still 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
                 dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
                 dprint("\tPM counter UAS-BI: {}".format(zq_uas_bi),2)
             
@@ -449,7 +474,8 @@ def QS_100_Check_BBE_ES_SES_UAS(zq_run,
                 dprint("\tPM counter UAS: {}".format(zq_uas),2)
                 zq_run.add_success(NE1, "PM Counter Reading","0.0", "PM counter [{}]-[1-DAY] for {} were incremented.".format(zq_locn, zq_vc4_idx1))
             else:
-                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", "PM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1))
+                zq_run.add_failure(NE1, "PM Counter Reading", "0.0", "PM Counter Reading", 
+                                        "PM counter [{}]-[1-DAY] for {} are still 0. {}".format(zq_locn, zq_vc4_idx1,QS_000_Print_Line_Function()))
                 dprint("KO\tPM counter [{}]-[1-DAY] for {} are still 0.".format(zq_locn, zq_vc4_idx1),2)
                 dprint("\tPM counter UAS: {}".format(zq_uas),2)
         
@@ -518,7 +544,8 @@ def QS_200_Verify_Validity_Flag(zq_run, zq_vc4_idx, zq_locn, zq_period, zq_val_f
                         else:
                             zq_res = False
                             dprint("KO\tValidity Flag [{}]".format(zq_cnt_entry),2)
-                            zq_run.add_failure(NE1, "PM Counter Validity Flag Check", "0.0", "PM Counter Validity Flag Check", "PM Counter Validity Flag Check Fail [{}]".format(zq_cnt_entry))
+                            zq_run.add_failure(NE1, "PM Counter Validity Flag Check", "0.0", "PM Counter Validity Flag Check", 
+                                                    "PM Counter Validity Flag Check Fail [{}] {}".format(zq_cnt_entry,QS_000_Print_Line_Function()))
             
             if not zq_res:
                 zq_str = zq_str + zq_cnt_entry        
@@ -533,8 +560,10 @@ def QS_900_Set_Date(zq_date,zq_time):
     zq_cmd=zq_msg.get_cmd_status()
     if zq_cmd == (True,'COMPLD'):
         dprint("OK\tNE date & time changed to {} & {}".format(zq_date,zq_time),2)
+        zq_run.add_success(NE1, "NE date & time changed to {} & {}".format(zq_date,zq_time),"0.0", "NE date & time changed to {} & {}".format(zq_date,zq_time))
     else:
         dprint("KO\tNE date & time change failure",2)
+        zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", "NE date & time change failure " + QS_000_Print_Line_Function())
 
     return
 
@@ -767,7 +796,7 @@ class Test(TestCase):
                 self.add_success(NE1, "PM counter reading","0.0", "All PM counters are = 0")
             else:
                 dprint("KO\tSome PM counters are NOT = 0",2)
-                self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0")
+                self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0" + QS_000_Print_Line_Function())
 
             zq_time = QS_910_Wait_Quarter()
             time.sleep(zq_time)
@@ -981,7 +1010,7 @@ class Test(TestCase):
                 self.add_success(NE1, "PM counter reading","0.0", "All PM counters are = 0")
             else:
                 dprint("KO\tSome PM counters are NOT = 0",2)
-                self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0")
+                self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0 " + QS_000_Print_Line_Function())
 
             zq_time = QS_910_Wait_Quarter()
             time.sleep(zq_time)
@@ -1198,7 +1227,7 @@ class Test(TestCase):
                 self.add_success(NE1, "PM counter reading","0.0", "All PM counters are = 0")
             else:
                 dprint("KO\tSome PM counters are NOT = 0",2)
-                self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0")
+                self.add_failure(NE1, "PM counter reading","0.0", "PM counter reading", "Some PM counters are NOT = 0 " + QS_000_Print_Line_Function())
 
             zq_time = QS_910_Wait_Quarter()
             time.sleep(zq_time)

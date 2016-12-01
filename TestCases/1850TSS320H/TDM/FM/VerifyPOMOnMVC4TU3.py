@@ -23,6 +23,7 @@ from katelibs.swp1850tss320     import SWP1850TSS
 from katelibs.facility_tl1      import * 
 import time
 import math
+from inspect import currentframe
 
 
 def dprint(zq_str,zq_level):
@@ -40,6 +41,16 @@ def dprint(zq_str,zq_level):
     if (E_DPRINT & zq_level):
         print(zq_str)
     return
+
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
 
 
 def QS_010_Create_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq_xc_list):
@@ -62,7 +73,7 @@ def QS_010_Create_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq
         else:
             if zq_cmd[1]== 'COMPLD':    
                 dprint("\nKO\tCross-connection creation failed {}\n".format(zq_xc_list[zq_j]),2)
-                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail")
+                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail "+ QS_000_Print_Line_Function())
             else:
                 dprint("\nKO\tTL1 Cross-connection command DENY\n",2)
         zq_i += 1
@@ -81,7 +92,7 @@ def QS_020_Delete_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq
             zq_run.add_success(NE1, "Cross-connection deletion successful {}".format(zq_xc_list[zq_i]),"0.0", "Cross-connection deletion successful")
         else:    
             dprint("\nKO\tCross-connection deletion failed {}".format(zq_xc_list[zq_i]),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection deletion failure","TL1 command fail")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection deletion failure","TL1 command fail "+ QS_000_Print_Line_Function())
     
         zq_i += 1
 
@@ -107,7 +118,7 @@ def QS_030_Create_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
         else:
             dprint("\nKO\tCross-connection creation failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection creation failure","TL1 command fail "+ QS_000_Print_Line_Function())
 
     return
 
@@ -128,7 +139,7 @@ def QS_040_Modify_AU4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_s
 
         else:
             dprint("\nKO\tHO Trace Identifier change failure for STM64AU4-{}-{}".format(zq_slot,zq_i),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "HO Trace Identifier change failure for STM64AU4-{}-{}".format(zq_slot,zq_i),"TL1 command fail")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "HO Trace Identifier change failure for STM64AU4-{}-{}".format(zq_slot,zq_i),"TL1 command fail "+ QS_000_Print_Line_Function())
 
         zq_i += 1
     return
@@ -147,7 +158,7 @@ def QS_050_Modify_MVC4_HO_Trace_Block(zq_run, zq_slot, zq_start_block, zq_block_
 
         else:
             dprint("\nKO\tHO Trace Identifier change failure for MVC4-{}-{}".format(zq_slot,zq_i),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "HO Trace Identifier change failure for MVC4-{}-{}".format(zq_slot,zq_i),"TL1 command fail")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "HO Trace Identifier change failure for MVC4-{}-{}".format(zq_slot,zq_i),"TL1 command fail "+ QS_000_Print_Line_Function())
         zq_i += 1
     return
 
@@ -172,7 +183,7 @@ def QS_060_Delete_LO_XC_Block(zq_run, zq_vc4_1, zq_vc4_2, zq_xc_list):
 
         else:
             dprint("\nKO\tCross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),2)
-            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),"TL1 command fail")
+            zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Cross-connection deletion failed from {}-{} to {}-{}".format(zq_tu3_idx1,zq_j,zq_tu3_idx2,zq_j),"TL1 command fail "+ QS_000_Print_Line_Function())
 
     return
 
@@ -190,7 +201,7 @@ def QS_070_Enable_Disable_POM(zq_run, zq_tu3,zq_enadis):
 
     else:
         dprint("\nKO\tPom and EGPOM setting to [{}] for {} failed".format(zq_enadis,zq_tu3),2)
-        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Pom and EGPOM setting to [{}] for {} failed".format(zq_enadis,zq_tu3),"TL1 command fail")
+        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Pom and EGPOM setting to [{}] for {} failed".format(zq_enadis,zq_tu3),"TL1 command fail "+ QS_000_Print_Line_Function())
     
     return
 
@@ -231,7 +242,7 @@ def QS_100_Check_POM_Block(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, 
                 zq_run.add_success(NE1, "Alarm not found when enabling/disabling POM","0.0", "Alarms check")
             else:
                 dprint("KO\tAlarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p1, zq_alm_p1[1]),2)
-                zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "Alarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p1, zq_alm_p1[1]),"Alarms check")
+                zq_run.add_failure(NE1,"TL1 COMMAND","0.0", "Alarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p1, zq_alm_p1[1]),"Alarms check "+ QS_000_Print_Line_Function())
 
         if zq_alm_p2[0] == True:
             if len(zq_alm_p2[1]) == 0:
@@ -239,7 +250,7 @@ def QS_100_Check_POM_Block(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, 
                 zq_run.add_success(NE1, "Alarm not found when enabling/disabling POM","0.0", "Alarms check")
             else:
                 dprint("KO\tAlarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p2, zq_alm_p2[1]),2)
-                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Alarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p2, zq_alm_p2[1]),"Alarms check")
+                zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "Alarm found on ONT port {} when enabling/disabling POM: {}".format(zq_ONT_p2, zq_alm_p2[1]),"Alarms check "+ QS_000_Print_Line_Function())
 
     return
 

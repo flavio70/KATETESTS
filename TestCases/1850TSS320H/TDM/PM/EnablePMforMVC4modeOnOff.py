@@ -26,6 +26,7 @@ from katelibs.facility_tl1      import *
 import time
 import string
 import math
+from inspect import currentframe
 
 E_MAX_MVC4 = 384
 E_LO_MTX = "MXH60GLO"
@@ -47,6 +48,17 @@ def dprint(zq_str,zq_level):
         print(zq_str)
     return
 
+def QS_000_Print_Line_Function(zq_gap=0):
+    cf = currentframe()
+    zq_line = cf.f_back.f_lineno + zq_gap
+    zq_code = str(cf.f_back.f_code)
+    zq_temp = zq_code.split(",")
+    zq_function = zq_temp[0].split(" ")
+    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
+    
+    return zq_res
+
+
 
 def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
     
@@ -66,7 +78,8 @@ def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
     else:
         dprint("KO\tNumber of MVC4 with SST containing PMD expected: {}".format(str(zq_sst_counter_exp)),2)
         dprint("\tNumber of MVC4 with SST containing PMD received: {}".format(zq_sst_counter),2)
-        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 with SST containing PMD exp.[{}] rcv.[{}]".format(str(zq_sst_counter_exp), zq_sst_counter),"MVC4 SST mismatch")
+        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 with SST containing PMD exp.[{}] rcv.[{}]".format(str(zq_sst_counter_exp), zq_sst_counter),
+                                "MVC4 with SST containing PMD exp.[{}] rcv.[{}] {}".format(str(zq_sst_counter_exp),zq_sst_counter,QS_000_Print_Line_Function()))
 
     return
 
@@ -89,7 +102,8 @@ def QS_020_Verify_Report(zq_run,zq_mtxlo_slot,zq_report_exp,zq_marker,zq_aid,zq_
     else:
         dprint("KO\tNumber of MVC4 REPT DBCHG expected: {}".format(zq_report_exp),2)
         dprint("\tNumber of MVC4 REPT DBCHG received: {}".format(zq_dbchg_num),2)
-        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 REPT DBCHG exp.[{}] rcv.[{}]".format(zq_report_exp, zq_dbchg_num),"MVC4 REPT DBCHG mismatch")
+        zq_run.add_failure(NE1, "EVENTS COLLECTION","0.0", "MVC4 REPT DBCHG exp.[{}] rcv.[{}]".format(zq_report_exp, zq_dbchg_num),
+                                "MVC4 REPT DBCHG exp.[{}] rcv.[{}] {}".format(zq_report_exp, zq_dbchg_num,QS_000_Print_Line_Function()))
 
     return
 
@@ -156,7 +170,7 @@ def QS_050_Check_PM_Time(zq_run,zq_mtxlo_slot, zq_locn, zq_dir, zq_period, zq_ch
                 dprint("KO\tPM counter time NOT increased for MVC4s expected: {} ".format(E_MAX_MVC4),2)
                 dprint("\tPM counter time NOT increased for MVC4s received: {} ".format(zq_not_elapsed_counter),2)
                 zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "PM counter time NOT increased for MVC4s exp.[{}] - rcv.[{}] ".format(E_MAX_MVC4,zq_not_elapsed_counter)
-                                      ,"PM COUNTER CHECK MISMATCH")
+                                      ,"PM counter time NOT increased for MVC4s exp.[{}] - rcv.[{}] {}".format(E_MAX_MVC4,zq_not_elapsed_counter,QS_000_Print_Line_Function()))
         else:
             if zq_counter == E_MAX_MVC4:
                 dprint("OK\tPM counter time increased for {} MVC4s".format(zq_counter),2)
@@ -166,12 +180,12 @@ def QS_050_Check_PM_Time(zq_run,zq_mtxlo_slot, zq_locn, zq_dir, zq_period, zq_ch
                 dprint("KO\tPM counter time increased for MVC4s expected: {} ".format(E_MAX_MVC4),2)
                 dprint("\tPM counter time increased for MVC4s received: {} ".format(zq_counter),2)
                 zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "PM counter time increased for MVC4s exp.[{}] - rcv.[{}] ".format(E_MAX_MVC4,zq_counter)
-                                      ,"PM COUNTER CHECK MISMATCH")
+                                      ,"PM counter time increased for MVC4s exp.[{}] - rcv.[{}] {}".format(E_MAX_MVC4,zq_counter,QS_000_Print_Line_Function()))
 
     else:
         dprint("KO\tError retrieving PM counter.",2)
-        zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "Error retrieving PM counter.".format(E_MAX_MVC4,zq_counter)
-                              ,"PM COUNTER CHECK")
+        zq_run.add_failure(NE1, "PM COUNTER CHECK","0.0", "Error retrieving PM counter."
+                              ,"Error retrieving PM counter. {}".format(QS_000_Print_Line_Function()))
         
     return 
 
@@ -300,7 +314,7 @@ class Test(TestCase):
         else:
             dprint("KO\tPM set to [NEND,RCV,15-MIN,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),2)
             self.add_failure(NE1,"PM set to [NEND,RCV,15-MIN,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),"0.0"
-                                  , "PM STATUS CHECK","PM set to [NEND,RCV,15-MIN,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4))
+                                ,"PM STATUS CHECK","PM set to [NEND,RCV,15-MIN,ON] for {} MVC4s instead of {} {}".format(zq_counter,E_MAX_MVC4,QS_000_Print_Line_Function()))
 
         QS_050_Check_PM_Time(self, zq_mtxlo_slot,"NEND", "RCV", "15-MIN")                
             
@@ -329,7 +343,7 @@ class Test(TestCase):
         else:
             dprint("KO\tPM set to [FEND,RCV,15-MIN,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),2)
             self.add_failure(NE1,"PM set to [FEND,RCV,15-MIN,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),"0.0"
-                                  , "PM STATUS CHECK","PM set to [FEND,RCV,15-MIN,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4))
+                                ,"PM STATUS CHECK","PM set to [FEND,RCV,15-MIN,ON] for {} MVC4s instead of {} {}".format(zq_counter, E_MAX_MVC4,QS_000_Print_Line_Function()))
 
         QS_050_Check_PM_Time(self, zq_mtxlo_slot,"FEND", "RCV", "15-MIN")                
 
@@ -359,7 +373,7 @@ class Test(TestCase):
         else:
             dprint("KO\tPM set to [NEND,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),2)
             self.add_failure(NE1,"PM set to [NEND,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),"0.0"
-                                  , "PM STATUS CHECK","PM set to [NEND,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4))
+                                ,"PM STATUS CHECK","PM set to [NEND,RCV,1-DAY,ON] for {} MVC4s instead of {} {}".format(zq_counter,E_MAX_MVC4,QS_000_Print_Line_Function()))
             
         QS_050_Check_PM_Time(self, zq_mtxlo_slot,"NEND", "RCV", "1-DAY")                
 
@@ -388,7 +402,7 @@ class Test(TestCase):
         else:
             dprint("KO\tPM set to [FEND,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),2)
             self.add_failure(NE1,"PM set to [FEND,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),"0.0"
-                                  , "PM STATUS CHECK","PM set to [FEND,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4))
+                                ,"PM STATUS CHECK","PM set to [FEND,RCV,1-DAY,ON] for {} MVC4s instead of {} {}".format(zq_counter,E_MAX_MVC4,QS_000_Print_Line_Function()))
 
         QS_050_Check_PM_Time(self, zq_mtxlo_slot,"FEND", "RCV", "1-DAY")                
 
@@ -418,7 +432,7 @@ class Test(TestCase):
         else:
             dprint("KO\tPM set to [BIDIR,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),2)
             self.add_failure(NE1,"PM set to [BIDIR,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4),"0.0"
-                                  , "PM STATUS CHECK","PM set to [BIDIR,RCV,1-DAY,ON] for {} MVC4s instead of {}".format(zq_counter, E_MAX_MVC4))
+                                ,"PM STATUS CHECK","PM set to [BIDIR,RCV,1-DAY,ON] for {} MVC4s instead of {} {}".format(zq_counter, E_MAX_MVC4,QS_000_Print_Line_Function()))
 
         QS_050_Check_PM_Time(self, zq_mtxlo_slot,"BIDIR", "RCV", "1-DAY")                
 
@@ -542,3 +556,4 @@ if __name__ == "__main__":
     # Run Test main flow
     # Please don't touch this code
     CTEST.run()
+    
