@@ -96,8 +96,8 @@ class Test(TestCase):
         insert Main body code for your test below
         '''
         print("\n******************** START ********************")
-        E_MAX_VC4=65
-        E_LOA_MVC4=64
+        E_MAX_VC4=385
+        E_LOA_MVC4=384
         E_LOA_MVC4TU3=E_LOA_MVC4*3
         E_LOA_MVC4TU12=E_LOA_MVC4TU3*21
 

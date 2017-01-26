@@ -69,7 +69,7 @@ def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
         for zq_i in range(1,E_MAX_MVC4+1):
             for zq_j in range(1,4):
                 zq_sst=zq_msg.get_cmd_sst("MVC4TU3-{}-{}-{}".format(zq_mtxlo_slot, str(zq_i),str(zq_j)))
-                if zq_sst_exp in zq_sst:
+                if zq_sst_exp in zq_sst[0]:
                     zq_sst_counter = zq_sst_counter+1
 
     if (zq_sst_counter == (zq_sst_counter_exp*3)):
@@ -114,10 +114,10 @@ def QS_030_Verify_PM(zq_msg, zq_aid, zq_locn_exp, zq_dir_exp, zq_period_exp, zq_
     zq_dir = zq_msg.get_cmd_attr_value(zq_aid, "DIRN")
     zq_period=zq_msg.get_cmd_attr_value(zq_aid, "TMPER")
     
-    if  zq_locn == zq_locn_exp and \
-        zq_dir == zq_dir_exp and \
-        zq_period == zq_period_exp and \
-        zq_pmstate == zq_pmstate_exp:
+    if  zq_locn[0] == zq_locn_exp and \
+        zq_dir[0] == zq_dir_exp and \
+        zq_period[0] == zq_period_exp and \
+        zq_pmstate[0] == zq_pmstate_exp:
         
         zq_res = True
         
@@ -138,7 +138,7 @@ def QS_040_Get_PM_Time(zq_run, zq_mtxlo_slot, zq_counter_type, zq_locn, zq_dir, 
             if zq_cmd == (True,'COMPLD'):
                 if zq_msg.get_cmd_response_size() != 0:
                     zq_time_str=zq_msg.get_cmd_attr_value("MVC4TU3-{}-{}-{},LOVC3".format(zq_mtxlo_slot, str(zq_i),str(zq_j)), "9")
-                    zq_sec_ary = zq_time_str.split("-")
+                    zq_sec_ary = zq_time_str[0].split("-")
                     zq_time_list.append("{}#MVC4TU3-{}-{}-{},LOVC3:{}-{}-{}-{}".format(zq_sec_ary[2],zq_mtxlo_slot, str(zq_i),str(zq_j),zq_counter_type, zq_locn,zq_dir,zq_period))
                     print("{}".format(zq_sec_ary[2]),end='\r')
             
@@ -290,7 +290,7 @@ class Test(TestCase):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
             if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
                     zq_filter=TL1check()
@@ -298,8 +298,8 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))

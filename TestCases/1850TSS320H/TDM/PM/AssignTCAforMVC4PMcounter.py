@@ -276,7 +276,7 @@ def QS_080_Get_PM_Counter(zq_run, zq_vc4_idx, zq_counter_type, zq_locn, zq_perio
         if zq_msg.get_cmd_response_size() != 0:
             zq_counter=zq_msg.get_cmd_attr_value("{},VC4".format(zq_vc4_idx), "2")
 
-    return int(zq_counter)
+    return int(zq_counter[0])
 
 
 def QS_090_Set_PM_Mode(zq_run, zq_vc4_idx, zq_locn, zq_mode, zq_period, zq_dir="RCV"):
@@ -624,8 +624,8 @@ class Test(TestCase):
         if zq_cmd == (True,'COMPLD'):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
-            if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+            if zq_attr_list1[0] is not None:
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
                     zq_filter=TL1check()
@@ -633,8 +633,8 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
