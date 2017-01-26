@@ -653,7 +653,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                 zq_hist_counter["SES-HOVC-RCV-FEND-15-MIN"] = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC","1-UP", "FEND", "15-MIN",zq_num15min="1")
                 zq_hist_counter["UAS-HOVC-RCV-FEND-15-MIN"] = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC","1-UP", "FEND", "15-MIN",zq_num15min="1")
 
-                QS_900_Set_Date("16-05-01", "23-59-30")
+                QS_900_Set_Date(zq_run,"16-05-01", "23-59-30")
                 time.sleep(E_TIMEOUT_5)
                 
                 zq_hist_counter["BBE-HOVC-RCV-NEND-1-DAY"]  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC","1-UP", "NEND", "1-DAY",zq_num1day="1")
@@ -698,7 +698,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
     return
 
 
-def QS_900_Set_Date(zq_date,zq_time):
+def QS_900_Set_Date(zq_run,zq_date,zq_time):
 
     zq_tl1_res=NE1.tl1.do("ED-DAT:::::{},{};".format(zq_date,zq_time))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -974,7 +974,7 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -1032,7 +1032,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -1097,7 +1097,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")

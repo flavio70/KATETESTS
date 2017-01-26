@@ -518,7 +518,7 @@ def QS_120_Verify_PM_Counter_Zero(zq_run, zq_vc4_idx):
     return int(zq_counter)
 
 
-def QS_900_Set_Date(zq_date,zq_time):
+def QS_900_Set_Date(zq_run,zq_date,zq_time):
 
     zq_tl1_res=NE1.tl1.do("ED-DAT:::::{},{};".format(zq_date,zq_time))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -730,7 +730,7 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -849,7 +849,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
         
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -972,7 +972,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
         
         zq_vc4_ch1="{}.1.1.1".format(str(E_VC4_3_1 % E_BLOCK_SIZE))
         zq_vc4_ch2="{}.1.1.1".format(str(E_VC4_3_2 % E_BLOCK_SIZE))

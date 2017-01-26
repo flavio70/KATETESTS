@@ -258,8 +258,8 @@ def QS_080_Set_BER_mode(zq_run, zq_ont_port, zq_order, zq_mode, zq_rate, zq_erro
     ONT.get_set_error_insertion_mode(zq_ont_port, zq_order, zq_mode)
     ONT.get_set_error_rate(zq_ont_port, zq_order, zq_rate)
     if zq_mode != 'RATE':
-        ONT.get_set_num_errored_burst_frames(zq_ont_port, zq_order, zq_frame_err)
-        ONT.get_set_num_not_errored_burst_frames(zq_ont_port, zq_order, zq_frame_noerr)
+        ONT.get_set_num_errored_burst_frames(zq_ont_port, zq_order, str(zq_frame_err))
+        ONT.get_set_num_not_errored_burst_frames(zq_ont_port, zq_order, str(zq_frame_noerr))
     ONT.get_set_error_insertion_type(zq_ont_port, zq_error)
     print("***********************************************")
     print("*\tBER / EBER parameters:")

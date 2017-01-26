@@ -553,7 +553,7 @@ def QS_200_Verify_Validity_Flag(zq_run, zq_vc4_idx, zq_locn, zq_period, zq_val_f
     return (zq_res,zq_str)
         
 
-def QS_900_Set_Date(zq_date,zq_time):
+def QS_900_Set_Date(zq_run,zq_date,zq_time):
 
     zq_tl1_res=NE1.tl1.do("ED-DAT:::::{},{};".format(zq_date,zq_time))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -772,7 +772,7 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "23-55-00")
+        QS_900_Set_Date(self,"16-05-01", "23-55-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY VALIDITY FLAG LONG - 2xMVC4 in first block                       ")
@@ -811,7 +811,7 @@ class Test(TestCase):
             zq_time_ary[1] = str(int(zq_time_ary[1]) - 2)
             zq_time = "-".join(zq_time_ary)
             
-            QS_900_Set_Date(zq_date, zq_time)
+            QS_900_Set_Date(self,zq_date, zq_time)
             
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPREI")
@@ -986,7 +986,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "23-55-00")
+        QS_900_Set_Date(self,"16-05-01", "23-55-00")
         
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -1025,7 +1025,7 @@ class Test(TestCase):
             zq_time_ary[1] = str(int(zq_time_ary[1]) - 2)
             zq_time = "-".join(zq_time_ary)
             
-            QS_900_Set_Date(zq_date, zq_time)
+            QS_900_Set_Date(self,zq_date, zq_time)
             
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPREI")
@@ -1207,7 +1207,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-05", "23-55-00")
+        QS_900_Set_Date(self,"16-05-05", "23-55-00")
         
         zq_vc4_ch1="{}.1.1.1".format(str(E_VC4_3_1 % E_BLOCK_SIZE))
         zq_vc4_ch2="{}.1.1.1".format(str(E_VC4_3_2 % E_BLOCK_SIZE))
@@ -1242,7 +1242,7 @@ class Test(TestCase):
             zq_time_ary[1] = str(int(zq_time_ary[1]) - 2)
             zq_time = "-".join(zq_time_ary)
             
-            QS_900_Set_Date(zq_date, zq_time)
+            QS_900_Set_Date(self,zq_date, zq_time)
             
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPBIP")
             QS_100_Check_BBE_ES_SES_UAS(self, ONT_P1, ONT_P2, zq_mtxlo_slot, zq_vc4_idx1, zq_vc4_idx2, "BIDIR","1-DAY","RCV","HPREI")

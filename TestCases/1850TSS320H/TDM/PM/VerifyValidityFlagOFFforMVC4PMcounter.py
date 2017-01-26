@@ -560,7 +560,7 @@ def QS_200_Verify_Validity_Flag(zq_run, zq_vc4_idx, zq_locn, zq_period, zq_val_f
     return (zq_res,zq_str)
         
 
-def QS_900_Set_Date(zq_date,zq_time):
+def QS_900_Set_Date(zq_run,zq_date,zq_time):
 
     zq_tl1_res=NE1.tl1.do("ED-DAT:::::{},{};".format(zq_date,zq_time))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -779,7 +779,7 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "23-55-00")
+        QS_900_Set_Date(self,"16-05-01", "23-55-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY VALIDITY FLAG OFF - 2xMVC4 in first block                       ")
@@ -1041,7 +1041,7 @@ class Test(TestCase):
             zq_res = True
             zq_str = ""
     
-            QS_900_Set_Date("16-05-02", "23-59-50")
+            QS_900_Set_Date(self,"16-05-02", "23-59-50")
             time.sleep(90)
 
             zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "OFF", 
@@ -1163,7 +1163,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "23-55-00")
+        QS_900_Set_Date(self,"16-05-01", "23-55-00")
         
         print("\n******************************************************************************")
         print("\n       VERIFY VALIDITY FLAG OFF - 2xMVC4 in second block                      ")
@@ -1425,7 +1425,7 @@ class Test(TestCase):
             zq_res = True
             zq_str = ""
     
-            QS_900_Set_Date("16-05-02", "23-59-50")
+            QS_900_Set_Date(self,"16-05-02", "23-59-50")
             time.sleep(90)
 
             zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "OFF", 
@@ -1554,7 +1554,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-05", "23-55-00")
+        QS_900_Set_Date(self,"16-05-05", "23-55-00")
         
         print("\n******************************************************************************")
         print("\n       VERIFY VALIDITY FLAG OFF - 2xMVC4 in third block                       ")
@@ -1815,7 +1815,7 @@ class Test(TestCase):
             zq_res = True
             zq_str = ""
     
-            QS_900_Set_Date("16-05-02", "23-59-50")
+            QS_900_Set_Date(self,"16-05-02", "23-59-50")
             time.sleep(90)
 
             zq_temp = QS_200_Verify_Validity_Flag(self, zq_vc4_idx1, "ALL", "1-DAY", "OFF", 

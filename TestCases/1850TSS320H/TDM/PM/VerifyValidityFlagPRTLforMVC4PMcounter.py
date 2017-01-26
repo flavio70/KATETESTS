@@ -553,7 +553,7 @@ def QS_200_Verify_Validity_Flag(zq_run, zq_vc4_idx, zq_locn, zq_period, zq_val_f
     return (zq_res,zq_str)
         
 
-def QS_900_Set_Date(zq_date,zq_time):
+def QS_900_Set_Date(zq_run,zq_date,zq_time):
 
     zq_tl1_res=NE1.tl1.do("ED-DAT:::::{},{};".format(zq_date,zq_time))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -768,7 +768,7 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY VALIDITY FLAG LONG - 2xMVC4 in first block                       ")
@@ -972,7 +972,7 @@ class Test(TestCase):
 
 
             #VERIFY FLAG IS PRTL FOR 24-HOUR
-            QS_900_Set_Date("16-05-01", "23-59-30")
+            QS_900_Set_Date(self,"16-05-01", "23-59-30")
             #WAIT 2 MINUTE TO BE SURE HISTORY ARE COLLECTED!
             time.sleep(120)
 
@@ -1088,7 +1088,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "02-00-00")
+        QS_900_Set_Date(self,"16-05-01", "02-00-00")
         
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -1292,7 +1292,7 @@ class Test(TestCase):
 
 
             #VERIFY FLAG IS PRTL FOR 24-HOUR
-            QS_900_Set_Date("16-05-01", "23-59-30")
+            QS_900_Set_Date(self,"16-05-01", "23-59-30")
             #WAIT 2 MINUTE TO BE SURE HISTORY ARE COLLECTED!
             time.sleep(120)
 
@@ -1415,7 +1415,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
 
-        QS_900_Set_Date("16-05-01", "03-00-00")
+        QS_900_Set_Date(self,"16-05-01", "03-00-00")
         
         zq_vc4_ch1="{}.1.1.1".format(str(E_VC4_3_1 % E_BLOCK_SIZE))
         zq_vc4_ch2="{}.1.1.1".format(str(E_VC4_3_2 % E_BLOCK_SIZE))
@@ -1615,7 +1615,7 @@ class Test(TestCase):
 
 
             #VERIFY FLAG IS PRTL FOR 24-HOUR
-            QS_900_Set_Date("16-05-01", "23-59-30")
+            QS_900_Set_Date(self,"16-05-01", "23-59-30")
             #WAIT 2 MINUTE TO BE SURE HISTORY ARE COLLECTED!
             time.sleep(120)
 
