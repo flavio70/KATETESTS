@@ -486,6 +486,13 @@ def QS_095_Check_MVC4TU3_Alarm(zq_run,zq_vc3,zq_man_exp,zq_prio_exp,zq_sa_nsa_ex
                 zq_sa_nsa = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 3)
                 zq_type = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 6)
                 zq_dir = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 7)
+
+                zq_prio = zq_prio[0]
+                zq_man = zq_man[0]
+                zq_sa_nsa = zq_sa_nsa[0]
+                zq_type = zq_type[0]
+                zq_dir = zq_dir[0]
+
                 if (zq_man == zq_man_exp) and \
                    (zq_type == zq_type_exp) and \
                    (zq_dir == zq_dir_exp) and \
@@ -1342,6 +1349,13 @@ def QS_0950_Check_MVC4TU12_Alarm(zq_run,zq_vc3,zq_man_exp,zq_prio_exp,zq_sa_nsa_
                 zq_sa_nsa = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc3), 3)
                 zq_type = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc3), 6)
                 zq_dir = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc3), 7)
+
+                zq_prio = zq_prio[0]
+                zq_man = zq_man[0]
+                zq_sa_nsa = zq_sa_nsa[0]
+                zq_type = zq_type[0]
+                zq_dir = zq_dir[0]
+
                 if (zq_man == zq_man_exp) and \
                    (zq_type == zq_type_exp) and \
                    (zq_dir == zq_dir_exp) and \
@@ -2233,8 +2247,8 @@ class Test(TestCase):
         if zq_cmd == (True,'COMPLD'):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
-            if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+            if zq_attr_list1[0] is not None:
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board equipped then delete!")
                     zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
@@ -2246,8 +2260,8 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         NE1.tl1.event_collection_start()
                         time.sleep(10)
                         zq_filter=TL1check()
