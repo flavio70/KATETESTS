@@ -148,7 +148,7 @@ class Test(TestCase):
             zq_unused_num = 0
             for zq_i in range(1,E_MAX_VC4):
                 zq_mvc4_use=zq_msg.get_cmd_attr_value("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i), "CONSTATE")
-                if zq_mvc4_use == 'UNUSED':
+                if zq_mvc4_use[0] == 'UNUSED':
                     zq_unused_num +=1
                 
             if zq_unused_num == E_LOA_MVC4:
@@ -179,7 +179,7 @@ class Test(TestCase):
                 zq_unused_num = 0
                 for zq_i in range(1,E_MAX_VC4):
                     zq_mvc4_use=zq_msg.get_cmd_attr_value("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i), "CONSTATE")
-                    if zq_mvc4_use == 'UNUSED':
+                    if zq_mvc4_use[0] == 'UNUSED':
                         zq_unused_num +=1
                     
                 if zq_unused_num == E_LOA_MVC4:
@@ -261,11 +261,11 @@ class Test(TestCase):
             zq_usedbylovcgmem_num = 0
             for zq_i in range(1,E_MAX_VC4):
                 zq_mvc4_use=zq_msg.get_cmd_attr_value("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i), "CONSTATE")
-                if zq_mvc4_use == 'UNUSED':
+                if zq_mvc4_use[0] == 'UNUSED':
                     zq_unused_num +=1
-                if zq_mvc4_use == 'USEDBYHOCC':
+                if zq_mvc4_use[0] == 'USEDBYHOCC':
                     zq_usedbyhocc_num +=1
-                if zq_mvc4_use == 'USEDBYLOVCGMEM':
+                if zq_mvc4_use[0] == 'USEDBYLOVCGMEM':
                     zq_usedbylovcgmem_num +=1
             
             zq_mvc4_num=zq_unused_num+zq_usedbyhocc_num+zq_usedbylovcgmem_num
@@ -321,7 +321,7 @@ class Test(TestCase):
         '''
         Check only MVC4 UNUSED are retrieved when CONSTATE=UNUSED:
         '''
-        zq_tl1_res=NE1.tl1.do("RTRV-LOPOOL::::::CONSTATE=UNUSED;")
+        zq_tl1_res=NE1.tl1.do("RTRV-LOPOOL;")
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         dprint(NE1.tl1.get_last_outcome(),1)
         zq_cmd=zq_msg.get_cmd_status()
@@ -329,7 +329,7 @@ class Test(TestCase):
             zq_unused_num = 0
             for zq_i in range(1,E_MAX_VC4):
                 zq_mvc4_use=zq_msg.get_cmd_attr_value("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i), "CONSTATE")
-                if zq_mvc4_use == 'UNUSED':
+                if zq_mvc4_use[0] == 'UNUSED':
                     zq_unused_num +=1
 
             if zq_unused_num == (E_LOA_MVC4-(E_HO_CONN-1)-math.ceil(((E_VCGVC3_MAXMBR*21+E_VCGVC12_MAXMBR) / 63))):
@@ -346,7 +346,7 @@ class Test(TestCase):
         '''
         Check only MVC4 USEBYHOCC are retrieved when CONSTATE=USEDBYHOCC:
         '''
-        zq_tl1_res=NE1.tl1.do("RTRV-LOPOOL::::::CONSTATE=USEDBYHOCC;")
+        zq_tl1_res=NE1.tl1.do("RTRV-LOPOOL;")
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         dprint(NE1.tl1.get_last_outcome(),1)
         zq_cmd=zq_msg.get_cmd_status()
@@ -354,7 +354,7 @@ class Test(TestCase):
             zq_usedbyhocc_num = 0
             for zq_i in range(1,E_MAX_VC4):
                 zq_mvc4_use=zq_msg.get_cmd_attr_value("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i), "CONSTATE")
-                if zq_mvc4_use == 'USEDBYHOCC':
+                if zq_mvc4_use[0] == 'USEDBYHOCC':
                     zq_usedbyhocc_num +=1
 
             if zq_usedbyhocc_num == E_HO_CONN -1:
