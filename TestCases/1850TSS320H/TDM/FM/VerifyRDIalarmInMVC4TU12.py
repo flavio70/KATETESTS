@@ -232,6 +232,11 @@ def QS_90_Check_Lovc12_RFI(zq_run,zq_tu12,zq_man_exp,zq_type_exp,zq_dir_exp):
             zq_man = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_tu12), 2)
             zq_type = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_tu12), 6)
             zq_dir = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_tu12), 7)
+            
+            zq_man = zq_man[0]
+            zq_dir = zq_dir[0]
+            zq_type = zq_type[0]
+
             if (zq_man == zq_man_exp) and (zq_type == zq_type_exp) and (zq_dir == zq_dir_exp):
                 dprint("OK\tRFI Condition verification successful for {} facility.".format(zq_tu12),2)
                 zq_run.add_success(NE1, "RFI Condition verification successful for {} facility.".format(zq_tu12),"0.0", "RFI CONDITION CHECK")

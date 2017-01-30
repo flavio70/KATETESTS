@@ -1287,11 +1287,11 @@ def QS_200_Fill_ASAP_List(zq_run,zq_asap_userlabel):
         zq_asap_list = list()
         zq_len=len(zq_msg._TL1message__m_coded['R_BODY_OK'])
         for zq_i in range(1,zq_len):
-            zq_field1=zq_msg._TL1message__m_coded['R_BODY_OK'][str(zq_i)]['VALUE'][1]
-            zq_field2=zq_msg._TL1message__m_coded['R_BODY_OK'][str(zq_i)]['VALUE'][2]
-            zq_field3=zq_msg._TL1message__m_coded['R_BODY_OK'][str(zq_i)]['VALUE'][3]
-            zq_field4=zq_msg._TL1message__m_coded['R_BODY_OK'][str(zq_i)]['VALUE'][4]
-            zq_field5=zq_msg._TL1message__m_coded['R_BODY_OK'][str(zq_i)]['VALUE'][5]
+            zq_field1=zq_msg._TL1message__m_coded['R_BODY_OK'][zq_i][0]['VALUE'][1]
+            zq_field2=zq_msg._TL1message__m_coded['R_BODY_OK'][zq_i][0]['VALUE'][2]
+            zq_field3=zq_msg._TL1message__m_coded['R_BODY_OK'][zq_i][0]['VALUE'][3]
+            zq_field4=zq_msg._TL1message__m_coded['R_BODY_OK'][zq_i][0]['VALUE'][4]
+            zq_field5=zq_msg._TL1message__m_coded['R_BODY_OK'][zq_i][0]['VALUE'][5]
             zq_temp=zq_field1+','+zq_field2+','+zq_field3+','+zq_field4+','+zq_field5
             zq_asap_list.append(zq_temp)
         dprint("OK\tASAP profile [{}] successfully retrieved".format(zq_asap_userlabel),2)

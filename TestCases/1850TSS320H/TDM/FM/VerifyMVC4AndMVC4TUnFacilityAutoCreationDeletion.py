@@ -68,8 +68,8 @@ def Q010_Remove_Board(zq_slot):
             dprint(NE1.tl1.get_last_outcome(),1)
             zq_msg=TL1message(NE1.tl1.get_last_outcome())
             zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
-            dprint("\t. . . waiting for removing . . .{}".format(zq_pst),2)
-        dprint("OK\tBoard {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
+            dprint("\t. . . waiting for removing . . .{}".format(zq_pst[0]),2)
+        dprint("OK\tBoard {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst[0]),2)
     return
 
 def Q020_Delete_Board(zq_slot):
@@ -87,11 +87,11 @@ def Q020_Delete_Board(zq_slot):
             zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
             zq_aid="MDL-"+zq_slot
             zq_prov=zq_msg.get_cmd_attr_value(zq_aid, "AUTOPROV")
-            if zq_prov == 'OFF':
+            if zq_prov[0] == 'OFF':
                 zq_flag=False
                 #print("\t. . . waiting for deleting . . .{}".format(zq_pst))
             dprint(NE1.tl1.get_last_outcome(),1)
-        dprint("OK\tBoard {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
+        dprint("OK\tBoard {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst[0]),2)
     return
 
 
@@ -163,8 +163,8 @@ class Test(TestCase):
                     dprint(NE1.tl1.get_last_outcome(),1)
                     zq_msg=TL1message(NE1.tl1.get_last_outcome())
                     zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
-                    print("\t. . . waiting for SWDL . . .{}".format(zq_pst))
-                print("OK\tBoard {}-{} equipped and {}".format(E_LO_MTX, zq_mtxlo_slot,zq_pst))
+                    print("\t. . . waiting for SWDL . . .{}".format(zq_pst[0]))
+                print("OK\tBoard {}-{} equipped and {}".format(E_LO_MTX, zq_mtxlo_slot,zq_pst[0]))
                 
         
         else:
@@ -187,13 +187,13 @@ class Test(TestCase):
                 zq_ptf_rate=zq_msg.get_cmd_attr_value("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i), "PTFRATE")
                 zq_ptf_lista=[]
                 zq_ptf_lista.append(zq_aid)
-                zq_ptf_lista.append(zq_ptf_type)
-                zq_ptf_lista.append(zq_ptf_rate)
+                zq_ptf_lista.append(zq_ptf_type[0])
+                zq_ptf_lista.append(zq_ptf_rate[0])
                 if zq_ptf_lista != ['MVC4-{}-{}'.format(zq_mtxlo_slot,zq_i),'MODVC4','VC4']:
                     print("KO\tRetrieving PTF:\n")
                     print("\t\tAID    : {}".format(zq_aid))
-                    print("\t\tPTFTYPE: {}".format(zq_ptf_type))
-                    print("\t\tPTFRATE: {}".format(zq_ptf_rate))
+                    print("\t\tPTFTYPE: {}".format(zq_ptf_type[0]))
+                    print("\t\tPTFRATE: {}".format(zq_ptf_rate[0]))
                     zq_num_ptf_ko+=1
                     self.add_failure(NE1, "TL1 command","0.0", "Retrieving PTF: {}\n".format(zq_ptf_lista),"PTF not found! "+ QS_000_Print_Line_Function())
                     #break
@@ -313,8 +313,8 @@ class Test(TestCase):
                     dprint(NE1.tl1.get_last_outcome(),1)
                     zq_msg=TL1message(NE1.tl1.get_last_outcome())
                     zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
-                    print("\t. . . waiting for SWDL . . .{}".format(zq_pst))
-                print("OK\tBoard {}-{} equipped and {}".format(E_LO_MTX, zq_mtxlo_slot,zq_pst))
+                    print("\t. . . waiting for SWDL . . .{}".format(zq_pst[0]))
+                print("OK\tBoard {}-{} equipped and {}".format(E_LO_MTX, zq_mtxlo_slot,zq_pst[0]))
                 
         
         else:

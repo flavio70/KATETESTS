@@ -309,6 +309,11 @@ def QS_90_Check_MVC4TU3_Alarm(zq_run,zq_vc3,zq_man_exp,zq_type_exp,zq_dir_exp):
             zq_man = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 2)
             zq_type = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 6)
             zq_dir = zq_msg.get_cmd_attr_value("{},LOVC3".format(zq_vc3), 7)
+
+            zq_man = zq_man[0]
+            zq_type = zq_type[0]
+            zq_dir = zq_dir[0]
+            
             if (zq_man == zq_man_exp) and (zq_type == zq_type_exp) and (zq_dir == zq_dir_exp):
                 dprint("OK\t{} Condition verification successful for {} facility [{}][{}][{}].".format(zq_man_exp,str(zq_vc3),zq_man,zq_type,zq_dir),2)
                 zq_run.add_success(NE1, "{} Condition verification successful for {} facility [{}][{}][{}].".format(zq_man_exp,str(zq_vc3),zq_man,zq_type,zq_dir),"0.0", "{} CONDITION CHECK".format(zq_man_exp))
@@ -481,6 +486,9 @@ class Test(TestCase):
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'COMPLD'):
             zq_attr_list=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+
+            zq_attr_list=zq_attr_list[0]
+            
             if zq_attr_list['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                 print("Board already equipped")
             else:

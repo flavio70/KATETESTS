@@ -118,7 +118,7 @@ def QS_030_Verify_Fac_MAN_Alarm(zq_run, zq_cmd, zq_fac_type, zq_check_num):
             zq_aid_list=zq_msg.get_cmd_aid_list()
             for zq_i in range(0, zq_check_num):
                 zq_man = zq_msg.get_cmd_attr_value(zq_aid_list[zq_i], 2)
-                if zq_man == 'MAN':
+                if zq_man[0] == 'MAN':
                     zq_man_nbr += 1
                     dprint("zq_man_nbr:="+str(zq_man_nbr),1)
                     
