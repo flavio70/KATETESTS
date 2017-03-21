@@ -4,7 +4,7 @@ TestCase template for K@TE test developers
 
 :field Description: This test provides a method to verify the behavior of  
 :field Description: PM history counters for MVC4 facilities.
-:field Topology: 5
+:field Topology: 1
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-9-1
@@ -266,10 +266,8 @@ def QS_080_Get_PM_Counter(zq_run,
         if zq_msg.get_cmd_response_size() != 0:
             zq_counter=zq_msg.get_cmd_attr_value("{},VC4".format(zq_vc4_idx), "2")
 
-    return int(zq_counter)
-
-    
-
+    return int(zq_counter[0])
+               
 def QS_110_Check_BBE_ES_SES_UAS(zq_run, 
                                 zq_ONT_p1, 
                                 zq_ONT_p2, 
@@ -653,7 +651,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
                 zq_hist_counter["SES-HOVC-RCV-FEND-15-MIN"] = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"SES-HOVC","1-UP", "FEND", "15-MIN",zq_num15min="1")
                 zq_hist_counter["UAS-HOVC-RCV-FEND-15-MIN"] = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"UAS-HOVC","1-UP", "FEND", "15-MIN",zq_num15min="1")
 
-                QS_900_Set_Date("16-05-01", "23-59-30")
+                QS_900_Set_Date(zq_run,"16-05-01", "23-59-30")
                 time.sleep(E_TIMEOUT_5)
                 
                 zq_hist_counter["BBE-HOVC-RCV-NEND-1-DAY"]  = QS_080_Get_PM_Counter(zq_run, zq_vc4_idx1,"BBE-HOVC","1-UP", "NEND", "1-DAY",zq_num1day="1")
@@ -698,7 +696,7 @@ def QS_110_Check_BBE_ES_SES_UAS(zq_run,
     return
 
 
-def QS_900_Set_Date(zq_date,zq_time):
+def QS_900_Set_Date(zq_run,zq_date,zq_time):
 
     zq_tl1_res=NE1.tl1.do("ED-DAT:::::{},{};".format(zq_date,zq_time))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -885,8 +883,8 @@ class Test(TestCase):
         if zq_cmd == (True,'COMPLD'):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
-            if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+            if zq_attr_list1[0] is not None:
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
                     zq_filter=TL1check()
@@ -894,8 +892,8 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
@@ -974,7 +972,7 @@ class Test(TestCase):
     
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -1032,7 +1030,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")
@@ -1097,7 +1095,7 @@ class Test(TestCase):
         
         time.sleep(E_WAIT)
         
-        QS_900_Set_Date("16-05-01", "01-00-00")
+        QS_900_Set_Date(self,"16-05-01", "01-00-00")
 
         print("\n******************************************************************************")
         print("\n       VERIFY BBE-ES-SES-UAS COUNTER NEAR END 15-MIN/1-DAY                    ")

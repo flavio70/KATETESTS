@@ -6,7 +6,7 @@ TestCase template for K@TE test developers
 :field Description: no alarms/errors are generating on SDH. For each block of 128 VC4 
 :field Description: is taken 1 VC4 and for this all VC12s are checked. 
 :field Description: S1 and S2 port on NE must be STM64
-:field Topology: 5 
+:field Topology: 1 
 :field Dependency: 
 :field Lab: SVT
 :field TPS: FM__5-2-9-1

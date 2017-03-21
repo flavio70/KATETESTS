@@ -8,7 +8,7 @@ TestCase template for K@TE test developers
 :field Description: increment of elapsed time (ON) or the not increment (OFF)
 :field Description: WARNING: for time constraint reason only 63 TU12 for each
 :field Description: bank is checked.
-:field Topology: 7
+:field Topology: 3
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-3-6
@@ -74,7 +74,7 @@ def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
         for zq_i in range(1,E_MAX_MVC4+1):
             for zq_j in range(1,4):
                 zq_sst=zq_msg.get_cmd_sst("MVC4TU3-{}-{}-{}".format(zq_mtxlo_slot, str(zq_i),str(zq_j)))
-                if zq_sst_exp in zq_sst:
+                if zq_sst_exp in zq_sst[0]:
                     zq_sst_counter = zq_sst_counter+1
 
     if (zq_sst_counter == (zq_sst_counter_exp*3)):
@@ -313,7 +313,7 @@ class Test(TestCase):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
             if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
                     zq_filter=TL1check()
@@ -322,7 +322,7 @@ class Test(TestCase):
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
                 if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))

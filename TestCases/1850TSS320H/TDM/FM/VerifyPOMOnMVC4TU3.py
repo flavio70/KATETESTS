@@ -5,7 +5,7 @@ TestCase template for K@TE test developers
 :field Description: Check that when enabling and disabling POM and EGPOM on MVC4TU3
 :field Description: no alarms/errors are generating on SDH  
 :field Description: S1 and S2 port on NE must be STM64
-:field Topology: 5 
+:field Topology: 1 
 :field Dependency: 
 :field Lab: SVT
 :field TPS: FM__5-2-8-1

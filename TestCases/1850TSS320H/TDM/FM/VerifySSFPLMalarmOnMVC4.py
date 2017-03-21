@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: Verify the detection of SSF alarm on MVC4 facilities.
-:field Topology: 5
+:field Topology: 1
 :field Dependency:
 :field Lab: SVT 
 :field TPS: FM__5-2-16-1
@@ -207,6 +207,11 @@ def QS_90_Check_MVC4_Alarm(zq_run,zq_vc4,zq_man_exp,zq_type_exp,zq_dir_exp):
             zq_man = zq_msg.get_cmd_attr_value("{},VC4".format(zq_vc4), 2)
             zq_type = zq_msg.get_cmd_attr_value("{},VC4".format(zq_vc4), 6)
             zq_dir = zq_msg.get_cmd_attr_value("{},VC4".format(zq_vc4), 7)
+            
+            zq_man = zq_man[0]
+            zq_type = zq_type[0]
+            zq_dir = zq_dir[0]
+
             if (zq_man == zq_man_exp) and (zq_type == zq_type_exp) and (zq_dir == zq_dir_exp):
                 dprint("OK\t{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc4)),2)
                 zq_run.add_success(NE1, "{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc4)),"0.0", "{} CONDITION CHECK".format(zq_man_exp))
@@ -361,20 +366,33 @@ class Test(TestCase):
         zq_xc_list.append("EMPTY,EMPTY")
 
         '''
-        Board equipment if not yet!
+        ### BEGIN ### Board equipment if not yet!
         '''
         zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
         zq_msg=TL1message(NE1.tl1.get_last_outcome())
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'COMPLD'):
-            zq_attr_list=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
-            if zq_attr_list['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
-                print("Board already equipped")
+            zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+            zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
+
+            if zq_attr_list1[0] is not None:
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+                    print("Board already equipped")
+                else:
+                    zq_filter=TL1check()
+                    zq_filter.add_pst("IS")
+                    zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                    NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                zq_filter=TL1check()
-                zq_filter.add_pst("IS")
-                zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
-                NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                        zq_filter=TL1check()
+                        zq_filter.add_pst("IS")
+                        zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
+                        NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
+        '''
+        ### END ### Board equipment if not yet!
+        '''
 
         '''
         Find 4 free slots and equip 4 x 1P10GSOE

@@ -7,7 +7,7 @@ TestCase template for K@TE test developers
 :field Description: created TCA profile. It is also verified the clearing of the alarm
 :field Description: when a NULL TCA profile is associated to the MVC4. At least the arise of
 :field Description: alarm when previous profile is applied again.
-:field Topology: 5
+:field Topology: 1
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-25-1
@@ -276,7 +276,7 @@ def QS_080_Get_PM_Counter(zq_run, zq_vc4_idx, zq_counter_type, zq_locn, zq_perio
         if zq_msg.get_cmd_response_size() != 0:
             zq_counter=zq_msg.get_cmd_attr_value("{},VC4".format(zq_vc4_idx), "2")
 
-    return int(zq_counter)
+    return int(zq_counter[0])
 
 
 def QS_090_Set_PM_Mode(zq_run, zq_vc4_idx, zq_locn, zq_mode, zq_period, zq_dir="RCV"):
@@ -490,17 +490,18 @@ def QS_160_Verify_TCA_Alarm(zq_run, zq_temp_ary, zq_vc4_idx, zq_alm_exp):
             #zq_temp_ary[zq_i] = zq_temp_ary[zq_i].replace("\"","")
             #zq_temp_ary[zq_i] = zq_temp_ary[zq_i].replace(" ","")
             zq_alm_ary = zq_temp_ary[zq_i].split(",")
-            zq_alm_ary[4] = "" 
-            zq_alm_ary[5] = ""
-            zq_sep = ","
-            zq_TCA_alm = zq_sep.join(zq_alm_ary)
-            zq_TCA_alm = zq_TCA_alm.replace("\"","")
-            zq_TCA_alm = zq_TCA_alm.replace(" ","")
-            if zq_TCA_alm == zq_alm_exp:
-                zq_res = True
-                break
-            else:
-                zq_res = False
+            if len(zq_alm_ary) > 4:
+                zq_alm_ary[4] = "" 
+                zq_alm_ary[5] = ""
+                zq_sep = ","
+                zq_TCA_alm = zq_sep.join(zq_alm_ary)
+                zq_TCA_alm = zq_TCA_alm.replace("\"","")
+                zq_TCA_alm = zq_TCA_alm.replace(" ","")
+                if zq_TCA_alm == zq_alm_exp:
+                    zq_res = True
+                    break
+                else:
+                    zq_res = False
     
     if not zq_res:
         zq_str = zq_str + zq_alm_exp        
@@ -624,8 +625,8 @@ class Test(TestCase):
         if zq_cmd == (True,'COMPLD'):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
-            if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+            if zq_attr_list1[0] is not None:
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
                     zq_filter=TL1check()
@@ -633,8 +634,8 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))

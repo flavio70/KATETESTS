@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: Verify the DBCHG messages generation for each MVC4 and MVC4TUn facilities
-:field Topology: 6 
+:field Topology: 2 
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-6-1
@@ -116,8 +116,8 @@ class Test(TestCase):
         if zq_cmd == (True,'COMPLD'):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
-            if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+            if zq_attr_list1[0] is not None:
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board equipped then delete!")
                     zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
@@ -129,8 +129,8 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         NE1.tl1.event_collection_start()
                         time.sleep(10)
                         zq_filter=TL1check()

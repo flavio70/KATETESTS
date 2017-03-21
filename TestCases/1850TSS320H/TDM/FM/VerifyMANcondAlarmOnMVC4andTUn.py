@@ -5,7 +5,7 @@ TestCase template for K@TE test developers
 :field Description: This test verifies the reporting/clearing of MAN condition for MVC4,
 :field Description: MVC4TU3 and MVC4TU12 facilities. For each block of 3x128 MVC4 one 
 :field Description: facility of each type is chosen. On it the presence/absence of alarm is verified. 
-:field Topology: 7
+:field Topology: 3
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-10-1
@@ -118,7 +118,7 @@ def QS_030_Verify_Fac_MAN_Alarm(zq_run, zq_cmd, zq_fac_type, zq_check_num):
             zq_aid_list=zq_msg.get_cmd_aid_list()
             for zq_i in range(0, zq_check_num):
                 zq_man = zq_msg.get_cmd_attr_value(zq_aid_list[zq_i], 2)
-                if zq_man == 'MAN':
+                if zq_man[0] == 'MAN':
                     zq_man_nbr += 1
                     dprint("zq_man_nbr:="+str(zq_man_nbr),1)
                     

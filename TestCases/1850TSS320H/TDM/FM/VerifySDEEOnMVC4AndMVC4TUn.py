@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: To verify that, for each MVC4-TUn path facility, SDEE is set when used in cross-connection.
-:field Topology: 6
+:field Topology: 2
 :field Dependency: Needs at least 5 half slot free to equip 10GSO extra board
 :field Lab: SVT
 :field TPS: FM__5-2-4-1
@@ -50,6 +50,9 @@ def Q010_Remove_Board(zq_slot):
             dprint(NE1.tl1.get_last_outcome(),1)
             zq_msg=TL1message(NE1.tl1.get_last_outcome())
             zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
+            
+            zq_pst = zq_pst[0]
+            
             dprint("\t. . . waiting for removing . . .{}".format(zq_pst),2)
         dprint("OK\tBoard {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
         self.add_success(NE1, "TL1 command","0.0", "Board {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst))
@@ -68,8 +71,14 @@ def Q020_Delete_Board(zq_slot):
             zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_slot))
             zq_msg=TL1message(NE1.tl1.get_last_outcome())
             zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
+
+            zq_pst = zq_pst[0]
+            
             zq_aid="MDL-"+zq_slot
             zq_prov=zq_msg.get_cmd_attr_value(zq_aid, "AUTOPROV")
+
+            zq_prov = zq_prov[0]
+
             if zq_prov == 'OFF':
                 zq_flag=False
                 #print("\t. . . waiting for deleting . . .{}".format(zq_pst))
@@ -157,8 +166,9 @@ class Test(TestCase):
         if zq_cmd == (True,'COMPLD'):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
-            if zq_attr_list1 is not None:
-                if zq_attr_list1['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
+            
+            if zq_attr_list1[0] is not None:
+                if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
                     zq_filter=TL1check()
@@ -166,8 +176,8 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2 is not None:
-                    if zq_attr_list2['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
+                if zq_attr_list2[0] is not None:
+                    if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
                         zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
@@ -215,6 +225,9 @@ class Test(TestCase):
             zq_tl1_res=NE1.tl1.do("RTRV-PTF::MVC4-{}-{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mtxlo_slot,zq_i))
             zq_msg=TL1message(NE1.tl1.get_last_outcome())
             zq_sst=zq_msg.get_cmd_sst("MVC4-{}-{}".format(zq_mtxlo_slot,zq_i))
+
+            zq_sst = zq_sst[0]
+            
             if "SDEE" in zq_sst:
                 dprint('KO\tMVC4-{}-{} sst wrongly contains SDEE'.format(zq_mtxlo_slot,zq_i),2) 
                 self.add_failure(NE1, "TL1 command","0.0", "MVC4-{}-{} sst wrongly contains SDEE".format(zq_mtxlo_slot,zq_i),
@@ -227,6 +240,9 @@ class Test(TestCase):
                 zq_tl1_res=NE1.tl1.do("RTRV-TU3::MVC4TU3-{}-{}-{};".format(zq_mtxlo_slot,zq_i,zq_j))
                 zq_msg=TL1message(NE1.tl1.get_last_outcome())
                 zq_sst=zq_msg.get_cmd_sst("MVC4TU3-{}-{}-{}".format(zq_mtxlo_slot,zq_i,zq_j))
+
+                zq_sst = zq_sst[0]
+                
                 if "SDEE" in zq_sst:
                     dprint('KO\t\tMVC4TU3-{}-{}-{} SST wrongly contains SDEE'.format(zq_mtxlo_slot,zq_i,zq_j),2) 
                     self.add_failure(NE1, "TL1 command","0.0", "Retrieving MVC4TU3-{}-{}-{}: {}\n".format(zq_mtxlo_slot,zq_i,zq_j),
@@ -269,6 +285,9 @@ class Test(TestCase):
                 zq_tl1_res=NE1.tl1.do("RTRV-PTF::{}::::PTFTYPE=MODVC4,PTFRATE=VC4;".format(zq_mvc4_str))
                 zq_msg=TL1message(NE1.tl1.get_last_outcome())
                 zq_sst=zq_msg.get_cmd_sst("{}".format(zq_mvc4_str))
+
+                zq_sst = zq_sst[0]
+                                
                 if "SDEE" in zq_sst:
                     dprint("OK\t\t{} SST correctly contains SDEE".format(zq_mvc4_str),2) 
                     self.add_success(NE1, "TL1 command","0.0", "{} SST correctly contains SDEE".format(zq_mvc4_str))
@@ -286,6 +305,9 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("RTRV-TU3::{}-{};".format(zq_tu3_str,zq_k))
                     zq_msg=TL1message(NE1.tl1.get_last_outcome())
                     zq_sst=zq_msg.get_cmd_sst("{}-{}".format(zq_tu3_str,zq_k))
+
+                    zq_sst = zq_sst[0]
+                    
                     if "SDEE" in zq_sst:
                         dprint('KO\t\t\t{}-{} SST wrongly contains SDEE'.format(zq_tu3_str,zq_k),2) 
                         self.add_failure(NE1, "TL1 command","0.0", "{}-{} SST wrongly contains SDEE".format(zq_tu3_str,zq_k),
@@ -343,6 +365,9 @@ class Test(TestCase):
                         zq_msg=TL1message(NE1.tl1.get_last_outcome())
                         dprint(NE1.tl1.get_last_outcome(),1)
                         zq_sst=zq_msg.get_cmd_sst("{}-{}".format(zq_tu3_idx,zq_j))
+
+                        zq_sst = zq_sst[0]
+                        
                         if 'SDEE' in zq_sst:
                             dprint("OK\t\t{}-{} SST correctly contains SDEE".format(zq_tu3_idx,zq_j),2)
                             self.add_success(NE1, "TL1 command","0.0", "{}-{} SST correctly contains SDEE".format(zq_tu3_idx,zq_j))
@@ -383,6 +408,9 @@ class Test(TestCase):
                             zq_msg=TL1message(NE1.tl1.get_last_outcome())
                             dprint(NE1.tl1.get_last_outcome(),1)
                             zq_sst=zq_msg.get_cmd_sst("{}-{}".format(zq_tu3_idx,zq_j))
+
+                            zq_sst = zq_sst[0]
+                            
                             if 'SDEE' in zq_sst:
                                 dprint("KO\t\t{}-{} SST wrongly contains SDEE".format(zq_tu3_idx,zq_j),2)
                                 self.add_failure(NE1, "TL1 command","0.0", "{}-{} SST wrongly contains SDEE".format(zq_tu3_idx,zq_j),
@@ -429,6 +457,9 @@ class Test(TestCase):
                 zq_msg=TL1message(NE1.tl1.get_last_outcome())
                 zq_cmd=zq_msg.get_cmd_status()
                 zq_struct=zq_msg.get_cmd_attr_value("{}".format(zq_mvc4_str),'LOSTRUCT' )
+                
+                zq_struct = zq_struct[0]
+                
                 if (zq_cmd[1]=='COMPLD' and zq_struct=='63xTU12'):
                     dprint("\nOK\t{} structure changed to 63xTU12".format(zq_mvc4_str),2)
                     self.add_success(NE1, "TL1 command","0.0", "{} structure changed to 63xTU12".format(zq_mvc4_str))
@@ -452,6 +483,9 @@ class Test(TestCase):
                                     zq_msg=TL1message(NE1.tl1.get_last_outcome())
                                     dprint(NE1.tl1.get_last_outcome(),1)
                                     zq_sst=zq_msg.get_cmd_sst("{}".format(zq_tu12_str))
+
+                                    zq_sst = zq_sst[0]
+                                    
                                     if 'SDEE' in zq_sst:
                                         dprint("OK\t\t{} SST correctly contains SDEE".format(zq_tu12_str),2)
                                         self.add_success(NE1, "TL1 command","0.0", "{} SST correctly contains SDEE".format(zq_tu12_str))
@@ -493,6 +527,9 @@ class Test(TestCase):
                                         zq_msg=TL1message(NE1.tl1.get_last_outcome())
                                         dprint(NE1.tl1.get_last_outcome(),1)
                                         zq_sst=zq_msg.get_cmd_sst("{}".format(zq_tu12_str))
+
+                                        zq_sst = zq_sst[0]
+                                        
                                         if 'SDEE' in zq_sst:
                                             dprint("KO\t\t{} SST wrongly contains SDEE".format(zq_tu12_str),2)
                                             self.add_failure(NE1, "TL1 command","0.0", "{} SST wrongly contains SDEE".format(zq_tu12_str),
@@ -538,6 +575,9 @@ class Test(TestCase):
                 zq_msg=TL1message(NE1.tl1.get_last_outcome())
                 zq_cmd=zq_msg.get_cmd_status()
                 zq_struct=zq_msg.get_cmd_attr_value("{}".format(zq_mvc4_str),'LOSTRUCT' )
+
+                zq_struct = zq_struct[0]
+                
                 if (zq_cmd[1]=='COMPLD' and zq_struct=='3xTU3'):
                     dprint("\nOK\t{} structure changed to 3xTU3".format(zq_mvc4_str),2)
                     self.add_success(NE1, "TL1 command","0.0", "{} structure changed to 3xTU3".format(zq_mvc4_str))

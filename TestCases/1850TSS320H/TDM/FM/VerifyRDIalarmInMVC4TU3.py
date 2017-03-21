@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: This test verifies the detection/clearance of RDI alarm on MVC4TU3 facilities
-:field Topology: 5
+:field Topology: 1
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-14-1
@@ -242,6 +242,7 @@ def QS_100_Check_RDI(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
                 zq_aid_list=zq_msg.get_cmd_aid_list()
                 for zq_i in range(0,6):
                     zq_man = zq_msg.get_cmd_attr_value(zq_aid_list[zq_i], 2)
+                    zq_man = zq_man[0]
                     if zq_man == 'RFI':
                         zq_rfi_nbr += 1
                         dprint("zq_rfi_nbr:="+str(zq_rfi_nbr),1)
@@ -271,6 +272,7 @@ def QS_100_Check_RDI(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
                 zq_aid_list=zq_msg.get_cmd_aid_list()
                 for zq_i in range(0,6):
                     zq_man = zq_msg.get_cmd_attr_value(zq_aid_list[zq_i], 2)
+                    zq_man = zq_man[0]
                     if zq_man == 'RFI':
                         zq_rfi_nbr += 1
                         dprint("zq_rfi_nbr:="+str(zq_rfi_nbr),1)
