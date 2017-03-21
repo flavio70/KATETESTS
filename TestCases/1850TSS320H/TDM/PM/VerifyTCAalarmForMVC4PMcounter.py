@@ -5,7 +5,7 @@ TestCase template for K@TE test developers
 :field Description: This test provides a method to verify the arise of TCA alarms  
 :field Description: when the MVC4 PM counters for MVC4 cross the threshold. It is
 :field Description: also verified the clearing of the alarms itself.
-:field Topology: 5
+:field Topology: 1
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-13-1

@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: Verify the detection of SSF alarm on MVC4 facilities.
-:field Topology: 5
+:field Topology: 1
 :field Dependency:
 :field Lab: SVT 
 :field TPS: FM__5-2-16-1

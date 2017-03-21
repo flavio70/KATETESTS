@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: Verify the TIM-V alarm on MVC4TU12 facilities.
-:field Topology: 5
+:field Topology: 1
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-25-1

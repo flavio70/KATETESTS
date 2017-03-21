@@ -5,7 +5,7 @@ TestCase template for K@TE test developers
 :field Description: This test provides a method to verify the TCA alarms is not present  
 :field Description: when the MVC4 facility is OOS-MA and during error insertion. 
 :field Description: As soon as the MVC4 is restored in IS-NR, the TCA alarms arise.
-:field Topology: 5
+:field Topology: 1
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-27-1

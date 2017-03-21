@@ -4,7 +4,7 @@ TestCase template for K@TE test developers
 
 :field Description: This test provides a method to verify the behavior of  
 :field Description: PM counters for MVC4 facilities.
-:field Topology: 5
+:field Topology: 1
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-5-1

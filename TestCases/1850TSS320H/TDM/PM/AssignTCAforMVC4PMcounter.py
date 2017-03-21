@@ -7,7 +7,7 @@ TestCase template for K@TE test developers
 :field Description: created TCA profile. It is also verified the clearing of the alarm
 :field Description: when a NULL TCA profile is associated to the MVC4. At least the arise of
 :field Description: alarm when previous profile is applied again.
-:field Topology: 5
+:field Topology: 1
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-25-1
@@ -490,17 +490,18 @@ def QS_160_Verify_TCA_Alarm(zq_run, zq_temp_ary, zq_vc4_idx, zq_alm_exp):
             #zq_temp_ary[zq_i] = zq_temp_ary[zq_i].replace("\"","")
             #zq_temp_ary[zq_i] = zq_temp_ary[zq_i].replace(" ","")
             zq_alm_ary = zq_temp_ary[zq_i].split(",")
-            zq_alm_ary[4] = "" 
-            zq_alm_ary[5] = ""
-            zq_sep = ","
-            zq_TCA_alm = zq_sep.join(zq_alm_ary)
-            zq_TCA_alm = zq_TCA_alm.replace("\"","")
-            zq_TCA_alm = zq_TCA_alm.replace(" ","")
-            if zq_TCA_alm == zq_alm_exp:
-                zq_res = True
-                break
-            else:
-                zq_res = False
+            if len(zq_alm_ary) > 4:
+                zq_alm_ary[4] = "" 
+                zq_alm_ary[5] = ""
+                zq_sep = ","
+                zq_TCA_alm = zq_sep.join(zq_alm_ary)
+                zq_TCA_alm = zq_TCA_alm.replace("\"","")
+                zq_TCA_alm = zq_TCA_alm.replace(" ","")
+                if zq_TCA_alm == zq_alm_exp:
+                    zq_res = True
+                    break
+                else:
+                    zq_res = False
     
     if not zq_res:
         zq_str = zq_str + zq_alm_exp        

@@ -6,7 +6,7 @@ TestCase template for K@TE test developers
 :field Description: no alarms/errors are generating on SDH. All 384x3x21=24192 TU12s 
 :field Description: are verified. 
 :field Description: S1 and S2 port on NE must be STM64
-:field Topology: 5 
+:field Topology: 1 
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: FM__8-1-4-1

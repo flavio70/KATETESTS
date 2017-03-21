@@ -5,7 +5,7 @@ TestCase template for K@TE test developers
 :field Description: Verify the retrieving of LOPOOL information when MVC4 are
 :field Description: UNUSED, USEDBYHOCC and USEDBYLOVCGMEM and CONSTATE parameter 
 :field Description: in RTRV-LOPOOL command is set to ALL, UNUSED, USEDBYHOCC
-:field Topology: 8 
+:field Topology: 4 
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-7-1

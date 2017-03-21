@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: Verify that MVC4 and MVC4TUn are created/deleted when board is created/deleted
-:field Topology: 7
+:field Topology: 3
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-1-1

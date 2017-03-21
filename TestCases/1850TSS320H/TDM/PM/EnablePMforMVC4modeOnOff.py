@@ -4,7 +4,7 @@ TestCase template for K@TE test developers
 
 :field Description: This test provides a method to enable the PM counter  
 :field Description: mode ON/OFF for MVC4 facilities.
-:field Topology: 7
+:field Topology: 3
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-1-1

@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: Verify the DBCHG messages generation for each MVC4 and MVC4TUn facilities
-:field Topology: 6 
+:field Topology: 2 
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-6-1

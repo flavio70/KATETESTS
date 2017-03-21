@@ -5,7 +5,7 @@ TestCase template for K@TE test developers
 :field Description: This test verifies the reporting/clearing of MAN condition for MVC4,
 :field Description: MVC4TU3 and MVC4TU12 facilities. For each block of 3x128 MVC4 one 
 :field Description: facility of each type is chosen. On it the presence/absence of alarm is verified. 
-:field Topology: 7
+:field Topology: 3
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-10-1

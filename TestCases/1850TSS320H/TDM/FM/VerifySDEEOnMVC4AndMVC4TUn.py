@@ -3,7 +3,7 @@
 TestCase template for K@TE test developers
 
 :field Description: To verify that, for each MVC4-TUn path facility, SDEE is set when used in cross-connection.
-:field Topology: 6
+:field Topology: 2
 :field Dependency: Needs at least 5 half slot free to equip 10GSO extra board
 :field Lab: SVT
 :field TPS: FM__5-2-4-1

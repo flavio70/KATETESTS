@@ -4,7 +4,7 @@ TestCase template for K@TE test developers
 
 :field Description: Verify the detection of SSF-V, AIS-V, LOP-V alarm on MVC4TU12 facilities and
 :field Description: TU-AIS, TU-LOP on instrument side.
-:field Topology: 5
+:field Topology: 1
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-18-1
@@ -269,20 +269,16 @@ def QS_90_Check_MVC4TU12_Alarm(zq_run,zq_vc12,zq_man_exp,zq_type_exp,zq_dir_exp)
             zq_type = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc12), 6)
             zq_dir = zq_msg.get_cmd_attr_value("{},LOVC12".format(zq_vc12), 7)
             
-            zq_man = zq_man[0]
-            zq_type = zq_type[0]
-            zq_dir = zq_dir[0]
-            
-            if (zq_man == zq_man_exp) and (zq_type == zq_type_exp) and (zq_dir == zq_dir_exp):
+            if (zq_man[0] == zq_man_exp) and (zq_type[0] == zq_type_exp) and (zq_dir[0] == zq_dir_exp):
                 dprint("OK\t{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc12)),2)
                 zq_run.add_success(NE1, "{} Condition verification successful for {} facility.".format(zq_man_exp, str(zq_vc12)),"0.0", "{} CONDITION CHECK".format(zq_man_exp))
             else:
                 dprint("KO\t{} Condition verification failure for {} facility.".format(zq_man_exp, str(zq_vc12)),2)
-                dprint("\t\tCOND: Exp [{}]  - Rcv [{}]".format(zq_man_exp,zq_man),2)
-                dprint("\t\tTYPE: Exp [{}] - Rcv [{}]".format(zq_type_exp,zq_type),2)
-                dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir),2)
-                zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc12),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir),"0.0", "{} CONDITION CHECK".format(zq_man_exp),
-                                       "{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}] {}".format(zq_man_exp,str(zq_vc12),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man,zq_type,zq_dir,QS_000_Print_Line_Function()))
+                dprint("\t\tCOND: Exp [{}]  - Rcv [{}]".format(zq_man_exp,zq_man[0]),2)
+                dprint("\t\tTYPE: Exp [{}] - Rcv [{}]".format(zq_type_exp,zq_type[0]),2)
+                dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir[0]),2)
+                zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".format(zq_man_exp, str(zq_vc12),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man[0],zq_type[0],zq_dir[0]),"0.0", "{} CONDITION CHECK".format(zq_man_exp),
+                                       "{} Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}] {}".format(zq_man_exp,str(zq_vc12),zq_man_exp,zq_type_exp,zq_dir_exp,zq_man[0],zq_type[0],zq_dir[0],QS_000_Print_Line_Function()))
         
     return
 

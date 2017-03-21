@@ -6,7 +6,7 @@ TestCase template for K@TE test developers
 :field Description: flag for the PM counters of MVC4 facilities, when counters are reset.
 :field Description: The OFF flag for first history entry is being checked.
 :field Description: REMARK: History for 1-DAY are not checked (see comments) for time reason.
-:field Topology: 5
+:field Topology: 1
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-21-1

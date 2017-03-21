@@ -4,7 +4,7 @@ TestCase template for K@TE test developers
 
 :field Description: Verify the detection of SD alarm on MVC4TU12 facility when BER (continuous/burst) and
 :field Description: EBER (continuous) are inserted.
-:field Topology: 5
+:field Topology: 1
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-21-1

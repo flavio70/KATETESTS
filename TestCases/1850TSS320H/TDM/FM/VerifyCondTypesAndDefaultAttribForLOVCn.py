@@ -7,7 +7,7 @@ TestCase template for K@TE test developers
 :field Description: of TPS doc. MXH60GLO 
 :field Description: The check is performed on 6 TU3s (2 for each 128 bank) and 
 :field Description: other 6 TU12s (2 for each 128 bank). 
-:field Topology: 5
+:field Topology: 1
 :field Dependency:
 :field Lab: SVT
 :field TPS: FM__5-2-31-1

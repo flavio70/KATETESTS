@@ -8,7 +8,7 @@ TestCase template for K@TE test developers
 :field Description: increment of elapsed time (ON) or the not increment (OFF)
 :field Description: WARNING: for time constraint reason only 63 TU12 for each
 :field Description: bank is checked.
-:field Topology: 7
+:field Topology: 3
 :field Dependency: NA
 :field Lab: SVT
 :field TPS: PM__5-5-3-6
@@ -74,7 +74,7 @@ def QS_010_Verify_SST(zq_run, zq_mtxlo_slot, zq_sst_exp, zq_sst_counter_exp):
         for zq_i in range(1,E_MAX_MVC4+1):
             for zq_j in range(1,4):
                 zq_sst=zq_msg.get_cmd_sst("MVC4TU3-{}-{}-{}".format(zq_mtxlo_slot, str(zq_i),str(zq_j)))
-                if zq_sst_exp in zq_sst:
+                if zq_sst_exp in zq_sst[0]:
                     zq_sst_counter = zq_sst_counter+1
 
     if (zq_sst_counter == (zq_sst_counter_exp*3)):
