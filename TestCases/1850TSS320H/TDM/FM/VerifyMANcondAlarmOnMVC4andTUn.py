@@ -74,9 +74,9 @@ def QS_020_Set_Fac_Status(zq_run, zq_slot, zq_fac_type, zq_fac_pos, zq_status):
 
     zq_filter=TL1check()
     if zq_status == 'OOS':
-        zq_filter.add_pst(zq_status+"-MA")
+        zq_filter.add_pst(zq_status+"-AUMA")
     if zq_status == 'IS':
-        zq_filter.add_pst(zq_status+"-NR")
+        zq_filter.add_pst("OOS-AU")
 
     if zq_fac_type == "VC4":
         zq_tl1_res=NE1.tl1.do("ED-PTF::MVC4-{}-1&&-384:::::{};".format(zq_slot, zq_status))
