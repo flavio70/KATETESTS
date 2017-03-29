@@ -61,15 +61,16 @@ def Q010_Remove_Board(zq_slot):
     zq_cmd=zq_msg.get_cmd_status()
     if zq_cmd == (True,'COMPLD'):
         dprint('\tRemoving board {}-{} . . .'.format(E_LO_MTX, zq_slot),2)
-        zq_pst=('',);
-        while (zq_pst[0] != 'OOS-MA'):
+        zq_pst='';
+        while (zq_pst != 'OOS-MA'):
             time.sleep(1)
             zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_slot))
             dprint(NE1.tl1.get_last_outcome(),1)
             zq_msg=TL1message(NE1.tl1.get_last_outcome())
-            zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
-            dprint("\t. . . waiting for removing . . .{}".format(zq_pst[0]),2)
-        dprint("OK\tBoard {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst[0]),2)
+            zq_temp=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
+            zq_pst=''.join(zq_temp[0])
+            dprint("\t. . . waiting for removing . . .{}".format(zq_pst),2)
+        dprint("OK\tBoard {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
     return
 
 def Q020_Delete_Board(zq_slot):
@@ -91,7 +92,7 @@ def Q020_Delete_Board(zq_slot):
                 zq_flag=False
                 #print("\t. . . waiting for deleting . . .{}".format(zq_pst))
             dprint(NE1.tl1.get_last_outcome(),1)
-        dprint("OK\tBoard {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst[0]),2)
+        dprint("OK\tBoard {}-{} deleted.".format(E_LO_MTX, zq_slot),2)
     return
 
 
@@ -156,15 +157,16 @@ class Test(TestCase):
             zq_cmd=zq_msg.get_cmd_status()
             if zq_cmd == (True,'COMPLD'):
                 print('\tProvisioning board {}-{} . . .'.format(E_LO_MTX, zq_mtxlo_slot))
-                zq_pst=('',);
-                while (zq_pst[0] != 'IS'):
+                zq_pst='';
+                while (zq_pst != 'IS'):
                     time.sleep(5)
                     zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     dprint(NE1.tl1.get_last_outcome(),1)
                     zq_msg=TL1message(NE1.tl1.get_last_outcome())
-                    zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+                    zq_temp=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
+                    zq_pst=''.join(zq_temp[0])
                     print("\t. . . waiting for SWDL . . .{}".format(zq_pst[0]))
-                print("OK\tBoard {}-{} equipped and {}".format(E_LO_MTX, zq_mtxlo_slot,zq_pst[0]))
+                print("OK\tBoard {}-{} equipped and {}".format(E_LO_MTX, zq_mtxlo_slot,zq_pst))
                 
         
         else:
