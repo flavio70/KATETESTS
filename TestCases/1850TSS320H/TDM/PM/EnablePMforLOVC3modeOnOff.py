@@ -114,13 +114,17 @@ def QS_030_Verify_PM(zq_msg, zq_aid, zq_locn_exp, zq_dir_exp, zq_period_exp, zq_
     zq_dir = zq_msg.get_cmd_attr_value(zq_aid, "DIRN")
     zq_period=zq_msg.get_cmd_attr_value(zq_aid, "TMPER")
     
-    if  zq_locn[0] == zq_locn_exp and \
-        zq_dir[0] == zq_dir_exp and \
-        zq_period[0] == zq_period_exp and \
-        zq_pmstate[0] == zq_pmstate_exp:
+    if  zq_locn is not None and \
+        zq_dir is not None and \
+        zq_period is not None and \
+        zq_pmstate is not None:
         
-        zq_res = True
-        
+        if  zq_locn[0] == zq_locn_exp and \
+            zq_dir[0] == zq_dir_exp and \
+            zq_period[0] == zq_period_exp and \
+            zq_pmstate[0] == zq_pmstate_exp:
+            
+            zq_res = True
     
     return zq_res
 
@@ -298,7 +302,7 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2[0] is not None:
+                if zq_attr_list2 is not None:
                     if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
