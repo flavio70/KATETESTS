@@ -2,7 +2,7 @@
 """
 TestCase template for K@TE test developers
 
-:field Description: Verify PM parameters are initialized to zero when registers are created for  
+:field Description: Verify PM parameters are initialized to zero when registers are created for
 :field Description: STM4 facilities and for higher order VCn facilities.
 :field Topology: 39
 :field Dependency:NA
@@ -167,33 +167,25 @@ def QS_100_Check_PM_Mode(zq_run, NE1_stmnp1, zq_locn, zq_period, zq_dir,stm_size
         return
 
 def QS_080_Get_PM_Counter(zq_run, NE1_stmnp1, zq_counter_type, zq_locn, zq_period, zq_dir,stm_size):
-        
-        zq_output_retrieve_PM = [] #è una lista di liste
-        zq_montype = []
-        zq_location = []
-        zq_counter = []
-        a = 0
-        zq_tl1_res=NE1.tl1.do("RTRV-PM-{}::{}:::{},0-UP,{},{},{};".format(stm_size,NE1_stmnp1, zq_counter_type, zq_locn,zq_dir,zq_period))
-        zq_msg=TL1message(NE1.tl1.get_last_outcome())
-        zq_cmd=zq_msg.get_cmd_status()
-        zq_response_size=zq_msg.get_cmd_display_output_rows()
-        #for x in zq_response_size:
-            #dprint("Values x {}".format(zq_response_size), 2)
-        if zq_cmd == (True,'COMPLD'):
+    zq_output_retrieve_PM = []
+    zq_montype = []
+    zq_location = []
+    zq_counter = []
+    a = 0
+    zq_tl1_res=NE1.tl1.do("RTRV-PM-{}::{}:::{},0-UP,{},{},{};".format(stm_size,NE1_stmnp1, zq_counter_type, zq_locn,zq_dir,zq_period))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    zq_response_size=zq_msg.get_cmd_display_output_rows()
+    if zq_cmd == (True,'COMPLD'):
             if zq_msg.get_cmd_response_size() != 0:
                 zq_montype=zq_msg.get_cmd_attr_value("{},{}".format(NE1_stmnp1,stm_size), "1")
-                '''
-                get_cmd_attr_value consente di leggere il parametro con chiave "1" di uno 
-                (output singola riga) o più dizionari (output multiriga)
-                '''
                 zq_counter=zq_msg.get_cmd_attr_value("{},{}".format(NE1_stmnp1,stm_size), "2")
                 for element in zq_counter:
                     zq_counter[a] = int(element)
                     a = a + 1
                 zq_location=zq_msg.get_cmd_attr_value("{},{}".format(NE1_stmnp1,stm_size), "4")
-
-        zq_output_retrieve_PM = [zq_montype, zq_counter, zq_location]
-        return zq_output_retrieve_PM
+    zq_output_retrieve_PM = [zq_montype, zq_counter, zq_location]
+    return zq_output_retrieve_PM
     
 def QS_100_Check_BBE_ES_SES_UAS(zq_run, 
                                 zq_ONT_p1, 
