@@ -86,8 +86,6 @@ class Test(TestCase):
         #
         
         for zq_au4_i in range(1,5):
-            zq_from = "{}AU4-{}-{}".format(zq_rate, NE1_S1, zq_au4_i)
-            zq_to = "{}AU4-{}-{}".format(zq_rate, NE1_S1, zq_au4_i)
             QS_1100_Create_AU4_XC(self, NE1, zq_rate, NE1_S1, zq_au4_i, zq_au4_i, "1WAY")
         
         print("\n*******************************************************************")

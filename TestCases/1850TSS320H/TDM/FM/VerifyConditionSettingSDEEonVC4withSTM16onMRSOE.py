@@ -79,7 +79,8 @@ class Test(TestCase):
         # VERIFY SECONDARY STATE DOES NOT CONTAINS SDEE
         #
         
-        QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, 1, "SDEE", False)
+        for zq_au4_i in range(1,17):
+            QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, zq_au4_i, "SDEE", False)
         
         print("\n*******************************************************************")
         print("\tCREATE VC4 CROSS-CONNECTIONS")
@@ -88,7 +89,8 @@ class Test(TestCase):
         # ENT-CRS-VC4:[TID]:FROM,TO:[CTAG]::[CCT]:[CKTID=]
         #
         
-        QS_1100_Create_AU4_XC(self, NE1, zq_rate, NE1_S1, "1", "1", "1WAY")
+        for zq_au4_i in range(1,17):
+            QS_1100_Create_AU4_XC(self, NE1, zq_rate, NE1_S1, zq_au4_i, zq_au4_i, "1WAY")
         
         print("\n*******************************************************************")
         print("\tCHECK SECONDARY STATE IS SDEE")
@@ -96,7 +98,8 @@ class Test(TestCase):
         # VERIFY SECONDARY STATE CONTAINS SDEE
         #
 
-        QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, 1, "SDEE", True)
+        for zq_au4_i in range(1,17):
+            QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, zq_au4_i, "SDEE", True)
         
         print("\n*******************************************************************")
         print("\tDELETE VC4 CROSS-CONNECTIONS")
@@ -104,7 +107,8 @@ class Test(TestCase):
         # DELETE VC4 CROSS-CONNECTION
         # DLT-CRS-VC4:[TID]:FROM,TO:[CTAG]::[CCT]:[CKTID=]
         #
-        QS_1200_Delete_AU4_XC(self, NE1, zq_rate, NE1_S1, "1", "1", "1WAY")
+        for zq_au4_i in range(1,17):
+            QS_1200_Delete_AU4_XC(self, NE1, zq_rate, NE1_S1, zq_au4_i, zq_au4_i, "1WAY")
 
         print("\n*******************************************************************")
         print("\tCHECK SECONDARY STATE IS NOT SDEE")
@@ -112,7 +116,8 @@ class Test(TestCase):
         # VERIFY SECONDARY STATE DOES NOT CONTAINS SDEE
         #
 
-        QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, 1, "SDEE", False)
+        for zq_au4_i in range(1,17):
+            QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, zq_au4_i, "SDEE", False)
 
         self.stop_tps_block(NE1.id,"FM", "5-2-70-9")
  

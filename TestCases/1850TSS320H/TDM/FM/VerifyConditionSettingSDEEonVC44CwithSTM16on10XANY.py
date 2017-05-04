@@ -114,7 +114,7 @@ class Test(TestCase):
             QS_1200_Delete_AU4_XC(self, NE1, zq_rate, NE1_S1, zq_au4_num, zq_au4_num, "1WAY", "4C")
 
         print("\n*******************************************************************")
-        print("\tCHECK SECONDARY STATE IS NOT SDEE")
+        print("\tCHECK SECONDARY STATE IS NOT SDEE ")
         print("*******************************************************************")
         # VERIFY SECONDARY STATE DOES NOT CONTAINS SDEE
         #

@@ -3,10 +3,10 @@
 TestCase template for K@TE test developers
 
 :field Description:To verify that, for each AUn path facility, SDEE is set for when it is used in cross-connection
-:field Topology: 56
+:field Topology: 63
 :field Dependency:NA
 :field Lab: SVT
-:field TPS: FM__5-2-70-19
+:field TPS: FM__5-2-70-32
 :field RunSections: 10101
 :field Author: tosima
 
@@ -63,26 +63,25 @@ class Test(TestCase):
         '''
         global NE1_S1
                 
-        self.start_tps_block(NE1.id,"FM", "5-2-70-19")
+        self.start_tps_block(NE1.id,"FM", "5-2-70-32")
 
         zq_temp  = TAG_RATE.split("_")
         zq_rate  = zq_temp[0]
         zq_board = zq_temp[1]
         
         print("\n*******************************************************************")
-        print("\tSTRUCTURE STM4 TO 1xAU44C")
+        print("\tSTRUCTURE {} TO 1xAU4{}C".format(zq_rate, zq_rate.replace("STM","")))
         print("*******************************************************************")
         #ED-STM4::STM4-1-1-6-3::::HOSTRUCT=1xAU44C
         #
-        QS_1300_Change_STMn_Structure(self, NE1, zq_rate, NE1_S1, "4xAU44C")
+        QS_1300_Change_STMn_Structure(self, NE1, zq_rate, NE1_S1, "1xAU464C")
 
         print("\n*******************************************************************")
         print("\tCHECK SECONDARY STATE IS NOT SDEE")
         print("*******************************************************************")
         # VERIFY SECONDARY STATE DOES NOT CONTAINS SDEE
         #
-        for zq_au4_num in E_AU44C_STM16_IDX:
-            QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, zq_au4_num, "SDEE", False, "4C")
+        QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, 1, "SDEE", False, "64C")
         
         print("\n*******************************************************************")
         print("\tCREATE VC4 CROSS-CONNECTIONS")
@@ -91,8 +90,7 @@ class Test(TestCase):
         # ENT-CRS-VC4:[TID]:FROM,TO:[CTAG]::[CCT]:[CKTID=]
         #
         
-        for zq_au4_num in E_AU44C_STM16_IDX:
-            QS_1100_Create_AU4_XC(self, NE1, zq_rate, NE1_S1, zq_au4_num, zq_au4_num, "1WAY", "4C")
+        QS_1100_Create_AU4_XC(self, NE1, zq_rate, NE1_S1, 1, 1, "1WAY", "64C")
         
         print("\n*******************************************************************")
         print("\tCHECK SECONDARY STATE IS SDEE")
@@ -100,8 +98,7 @@ class Test(TestCase):
         # VERIFY SECONDARY STATE CONTAINS SDEE
         #
 
-        for zq_au4_num in E_AU44C_STM16_IDX:
-            QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, zq_au4_num, "SDEE", True, "4C")
+        QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, 1, "SDEE", True, "64C")
         
         print("\n*******************************************************************")
         print("\tDELETE VC4 CROSS-CONNECTIONS")
@@ -110,8 +107,7 @@ class Test(TestCase):
         # DLT-CRS-VC4:[TID]:FROM,TO:[CTAG]::[CCT]:[CKTID=]
         #
 
-        for zq_au4_num in E_AU44C_STM16_IDX:
-            QS_1200_Delete_AU4_XC(self, NE1, zq_rate, NE1_S1, zq_au4_num, zq_au4_num, "1WAY", "4C")
+        QS_1200_Delete_AU4_XC(self, NE1, zq_rate, NE1_S1, 1, 1, "1WAY", "64C")
 
         print("\n*******************************************************************")
         print("\tCHECK SECONDARY STATE IS NOT SDEE")
@@ -119,20 +115,19 @@ class Test(TestCase):
         # VERIFY SECONDARY STATE DOES NOT CONTAINS SDEE
         #
 
-        for zq_au4_num in E_AU44C_STM16_IDX:
-            QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, zq_au4_num, "SDEE", False, "4C")
+        QS_1000_Check_AU4_SST(self, NE1, zq_rate, NE1_S1, 1, "SDEE", False, "64C")
 
 
         print("\n*******************************************************************")
-        print("\tSTRUCTURE STM4 BACK TO 4xAU4")
+        print("\tSTRUCTURE {} BACK TO {}xAU4".format(zq_rate, zq_rate.replace("STM","")))
         print("*******************************************************************")
         #ED-STM4::STM4-1-1-6-3::::HOSTRUCT=1xAU44C
         #
 
-        QS_1300_Change_STMn_Structure(self, NE1, zq_rate, NE1_S1, "16xAU4")
+        QS_1300_Change_STMn_Structure(self, NE1, zq_rate, NE1_S1, "64xAU4")
 
         
-        self.stop_tps_block(NE1.id,"FM", "5-2-70-19")
+        self.stop_tps_block(NE1.id,"FM", "5-2-70-32")
  
 
     def test_cleanup(self):
@@ -152,7 +147,6 @@ class Test(TestCase):
         NE1.clean_up()
 
 
-
 #Please don't change the code below#
 if __name__ == "__main__":
     #initializing the Test object instance, do not remove
@@ -163,7 +157,7 @@ if __name__ == "__main__":
     NE1_S1=NE1.get_preset("S1")
     
     
-    TAG_RATE="STM16_MRSOE"
+    TAG_RATE="STM64_1P10GSOE"
     
     CTEST.add_eqpt(NE1)
 
