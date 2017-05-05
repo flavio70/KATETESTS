@@ -36,7 +36,7 @@ def QS_000_Print_Line_Function(zq_gap=0):
     return zq_res
 
 
-def Q010_Remove_Board(zq_slot):
+def Q010_Remove_Board(zq_run, zq_slot):
     zq_tl1_res=NE1.tl1.do("RMV-EQPT::{}-{};".format(E_LO_MTX, zq_slot))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     dprint(NE1.tl1.get_last_outcome(),1)
@@ -55,10 +55,10 @@ def Q010_Remove_Board(zq_slot):
             
             dprint("\t. . . waiting for removing . . .{}".format(zq_pst),2)
         dprint("OK\tBoard {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
-        self.add_success(NE1, "TL1 command","0.0", "Board {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst))
+        zq_run.add_success(NE1, "TL1 command","0.0", "Board {}-{} removed and {}".format(E_LO_MTX, zq_slot,zq_pst))
     return
 
-def Q020_Delete_Board(zq_slot):
+def Q020_Delete_Board(zq_run, zq_slot):
     zq_tl1_res=NE1.tl1.do("DLT-EQPT::{}-{};".format(E_LO_MTX, zq_slot))
     dprint(NE1.tl1.get_last_outcome(),1)
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -72,19 +72,21 @@ def Q020_Delete_Board(zq_slot):
             zq_msg=TL1message(NE1.tl1.get_last_outcome())
             zq_pst=zq_msg.get_cmd_pst("{}-{}".format(E_LO_MTX, zq_slot))
 
-            zq_pst = zq_pst[0]
-            
-            zq_aid="MDL-"+zq_slot
-            zq_prov=zq_msg.get_cmd_attr_value(zq_aid, "AUTOPROV")
+            if zq_pst == None:
+                zq_aid="MDL-"+zq_slot
+                zq_tl1_res=NE1.tl1.do("RTRV-EQPT::{};".format(zq_aid))
+                zq_msg=TL1message(NE1.tl1.get_last_outcome())
+                zq_pst=zq_msg.get_cmd_pst("{}".format(zq_aid))
+                zq_prov=zq_msg.get_cmd_attr_value(zq_aid, "AUTOPROV")
 
-            zq_prov = zq_prov[0]
+                zq_prov = zq_prov[0]
 
-            if zq_prov == 'OFF':
-                zq_flag=False
-                #print("\t. . . waiting for deleting . . .{}".format(zq_pst))
-            dprint(NE1.tl1.get_last_outcome(),1)
-        dprint("OK\tBoard {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
-        self.add_success(NE1, "TL1 command","0.0", "Board {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst))
+                if zq_prov == 'OFF':
+                    zq_flag=False
+                    #print("\t. . . waiting for deleting . . .{}".format(zq_pst))
+                    dprint(NE1.tl1.get_last_outcome(),1)
+                    dprint("OK\tBoard {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst),2)
+                    zq_run.add_success(NE1, "TL1 command","0.0", "Board {}-{} deleted and {}".format(E_LO_MTX, zq_slot,zq_pst))
     return
 
 def dprint(zq_str,zq_level):
@@ -167,7 +169,7 @@ class Test(TestCase):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
             
-            if zq_attr_list1[0] is not None:
+            if zq_attr_list1 is not None:
                 if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
@@ -176,7 +178,7 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2[0] is not None:
+                if zq_attr_list2 is not None:
                     if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
@@ -631,12 +633,12 @@ class Test(TestCase):
         '''
         #Remove board
         '''            
-        Q010_Remove_Board(zq_mtxlo_slot)
+        Q010_Remove_Board(self, zq_mtxlo_slot)
       
         '''
         #Delete board
         '''            
-        Q020_Delete_Board(zq_mtxlo_slot)
+        Q020_Delete_Board(self, zq_mtxlo_slot)
 
 
 

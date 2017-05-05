@@ -21,6 +21,8 @@ import time
 import string
 import math
 from inspect import currentframe
+from kateUsrLibs.tosima.FmLib import *    
+
 
 
 def dprint(zq_str,zq_level):

@@ -24,36 +24,7 @@ import time
 import string
 import math
 from inspect import currentframe
-
-E_RFI_NUM = 1
-E_BLOCK_SIZE = 64        
-E_WAIT = 10
-
-def dprint(zq_str,zq_level):
-    '''
-    # print debug level:  0=no print
-    #                     1=TL1 message response
-    #                     2=OK/KO info 
-    #                     4=execution info
-    # can be used in combination, i.e.
-    #                     3=TL1 message response+OK/KO info
-    # 
-    '''
-    E_DPRINT = 6    
-    
-    if (E_DPRINT & zq_level):
-        print(zq_str)
-    return
-
-def QS_000_Print_Line_Function(zq_gap=0):
-    cf = currentframe()
-    zq_line = cf.f_back.f_lineno + zq_gap
-    zq_code = str(cf.f_back.f_code)
-    zq_temp = zq_code.split(",")
-    zq_function = zq_temp[0].split(" ")
-    zq_res = "****** Line [{}] in function [{}]".format(zq_line,zq_function[2])
-    
-    return zq_res
+from kateUsrLibs.tosima.FmLib import *
 
 
 def QS_010_Create_HO_XC_Block(zq_run, zq_slot, zq_start_block, zq_block_size, zq_xc_list):
@@ -214,32 +185,14 @@ def QS_070_Enable_Disable_POM(zq_run, zq_mtx_slot, zq_vc4, zq_enadis):
         
     return
 
-def QS_80_Check_ONT_Alarm(zq_run, zq_ont_port, zq_alm_exp):
-
-    ONT.start_measurement(zq_ont_port)
-    time.sleep(E_WAIT)
-    ONT.halt_measurement(zq_ont_port)
-    zq_alm = ONT.retrieve_ho_lo_alarms(zq_ont_port)
-    if zq_alm[0] == True:
-        if zq_alm[1][0] == zq_alm_exp:
-            dprint("OK\t{} Alarm found on ONT port {}".format(zq_alm_exp,zq_ont_port),2)
-            zq_run.add_success(NE1, "{} Alarm found on ONT port {}".format(zq_alm_exp,zq_ont_port),"0.0", "ONT Alarm check")
-        else:
-            dprint("KO\tAlarm mismatch on ONT port {}:".format(zq_ont_port),2)
-            dprint("\t\tAlarm: Exp [{}]  - Rcv [{}]".format(zq_alm_exp,zq_alm[1][0]),2)
-            zq_run.add_failure(NE1,  "ONT Alarm check","0.0", "Alarm mismatch on ONT port {}: Exp [{}]  - Rcv [{}]".format(zq_ont_port, zq_alm_exp, zq_alm[1][0]),
-                                     "Alarm mismatch on ONT port {}: Exp [{}]  - Rcv [{}] {}".format(zq_ont_port, zq_alm_exp, zq_alm[1][0],QS_000_Print_Line_Function()))
-
-    return
-
 def QS_90_Check_MVC4TU3_Alarm(zq_run,zq_vc3,zq_man_exp,zq_type_exp,zq_dir_exp):
 
     zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC3::{}:::{};".format(str(zq_vc3),zq_man_exp))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     dprint(NE1.tl1.get_last_outcome(),1)
     if (zq_msg.get_cmd_response_size() == 0):
-        dprint("KO\t{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),2)
-        zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0] {}".format(E_RFI_NUM,QS_000_Print_Line_Function()))
+        dprint("KO\t{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM_TU12),2)
+        zq_run.add_failure(NE1,"{} Condition verification failure for {} facility : Exp [{}] - Rcv [0]".format(zq_man_exp, zq_vc3, E_RFI_NUM_TU12),"0.0", "SSF CONDITION CHECK","SSF Condition verification failure: Exp [{}] - Rcv [0] {}".format(E_RFI_NUM_TU12,QS_000_Print_Line_Function()))
     else:
         zq_cmd=zq_msg.get_cmd_status()
         if zq_cmd == (True,'COMPLD'):
@@ -284,7 +237,7 @@ def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
         
         ONT.get_set_alarm_insertion_activation("P1","LO","ON")
         
-        QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p2, "TU-AIS")
+        QS_85_Check_ONT_Alarm(zq_run, NE1, ONT,  zq_ONT_p2, "TU-AIS")
 
         QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx1,"SSF-V","NEND","RCV")
         QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx1, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
@@ -292,7 +245,7 @@ def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
         ONT.get_set_alarm_insertion_activation("P1","LO","OFF")
         ONT.get_set_alarm_insertion_activation("P2","LO","ON")
             
-        QS_80_Check_ONT_Alarm(zq_run, zq_ONT_p1, "TU-AIS")
+        QS_85_Check_ONT_Alarm(zq_run, NE1, ONT,  zq_ONT_p1, "TU-AIS")
             
         QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx2,"SSF-V","NEND","RCV")
         QS_90_Check_MVC4TU3_Alarm(zq_run,zq_tu3_idx2, zq_alm_type.replace("TU","")+"-V","NEND","RCV")
@@ -300,21 +253,6 @@ def QS_100_Check_SSF(zq_run, zq_ONT_p1, zq_ONT_p2, zq_mtx_slot, zq_vc4_1, zq_vc4
         ONT.get_set_alarm_insertion_activation("P2","LO","OFF")
         time.sleep(E_WAIT+5)
     
-    return
-
-
-def QS_150_Check_No_Alarm(zq_run,zq_vc3_range):
-
-    zq_tl1_res=NE1.tl1.do("RTRV-COND-LOVC3::{};".format(zq_vc3_range))
-    zq_msg=TL1message(NE1.tl1.get_last_outcome())
-    dprint(NE1.tl1.get_last_outcome(),1)
-    if (zq_msg.get_cmd_response_size() == 0):
-        dprint("OK\tPath is alarm free.",2)
-        zq_run.add_success(NE1,"Path is alarm free.","0.0","CONDITION ALARMS CHECK")
-    else:
-        dprint("KO\tAlarms are present on path.",2)
-        zq_run.add_failure(NE1,"Alarms are present on path.","0.0","CONDITION ALARMS CHECK","Alarms are present on path. "+QS_000_Print_Line_Function())
-
     return
 
 
@@ -409,7 +347,7 @@ class Test(TestCase):
             zq_attr_list1=zq_msg.get_cmd_attr_values("{}-{}".format(E_LO_MTX, zq_mtxlo_slot))
             zq_attr_list2=zq_msg.get_cmd_attr_values("{}-{}".format("MDL", zq_mtxlo_slot))
 
-            if zq_attr_list1[0] is not None:
+            if zq_attr_list1 is not None:
                 if zq_attr_list1[0]['PROVISIONEDTYPE']==E_LO_MTX and zq_attr_list1[0]['ACTUALTYPE']==E_LO_MTX:  #Board equipped 
                     print("Board already equipped")
                 else:
@@ -418,7 +356,7 @@ class Test(TestCase):
                     zq_tl1_res=NE1.tl1.do("ENT-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot))
                     NE1.tl1.do_until("RTRV-EQPT::{}-{};".format(E_LO_MTX, zq_mtxlo_slot),zq_filter)
             else:
-                if zq_attr_list2[0] is not None:
+                if zq_attr_list2 is not None:
                     if zq_attr_list2[0]['ACTUALTYPE']==E_LO_MTX:  #Equip Board 
                         zq_filter=TL1check()
                         zq_filter.add_pst("IS")
@@ -507,16 +445,16 @@ class Test(TestCase):
         '''
         INITIAL CHECK NO ALARM PRESENT ON PATH AFTER HO CROSS-CONNECTIONS ARE CREATED 
         '''
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK1_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK1_2)
         
         QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TULOP")
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK1_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK1_2)
         
         QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_1_1, E_VC4_1_2,"TUAIS")
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK1_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK1_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK1_2)
         
         
         QS_060_Delete_LO_XC_Block(self, E_VC4_1_1, E_VC4_1_2, zq_xc_list)
@@ -556,16 +494,16 @@ class Test(TestCase):
         '''
         INITIAL CHECK NO ALARM PRESENT ON PATH AFTER HO CROSS-CONNECTIONS ARE CREATED 
         '''
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK2_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK2_2)
         
         QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2,"TULOP")
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK2_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK2_2)
         
         QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_2_1, E_VC4_2_2,"TUAIS")
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK2_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK2_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK2_2)
  
         
         QS_060_Delete_LO_XC_Block(self, E_VC4_2_1, E_VC4_2_2, zq_xc_list)
@@ -612,16 +550,16 @@ class Test(TestCase):
         '''
         INITIAL CHECK NO ALARM PRESENT ON PATH AFTER HO CROSS-CONNECTIONS ARE CREATED 
         '''
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK3_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK3_2)
         
         QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2,"TULOP")
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK3_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK3_2)
         
         QS_100_Check_SSF(self, "P1", "P2", zq_mtxlo_slot, E_VC4_3_1, E_VC4_3_2,"TUAIS")
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_1)
-        QS_150_Check_No_Alarm(self,E_COND_AID_BK3_2)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK3_1)
+        QS_150_Check_No_Alarm(self, NE1, E_COND_AID_BK3_2)
  
 
         QS_060_Delete_LO_XC_Block(self, E_VC4_3_1, E_VC4_3_2, zq_xc_list)
